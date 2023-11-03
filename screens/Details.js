@@ -1,5 +1,4 @@
-import { NavigationHelpersContext } from '@react-navigation/native';
-import * as React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,99 +6,85 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
-  FlatList,
-  TextInput
+  TextInput,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../assets/colors/colors';
 
 export default Details = ({ route, navigation }) => {
-    const [searchInput, setSearchInput] = React.useState('');
-  const { item } = route.params;
-
-  const renderIngredientsItem = ({ item }) => {
-    return (
-      <View
-        style={[
-          styles.ingredientItemWrapper,
-          {
-            marginLeft: item.id === '1' ? 20 : 0,
-          },
-        ]}>
-        <Image source={item.image} style={styles.ingredientImage} />
-      </View>
-    );
-  };
+  const [searchInput, setSearchInput] = useState('');
+  const [itemsList, setItemsList] = useState('');
+  const [additionalRequests, setAdditionalRequests] = useState('');
+  const { item, category } = route.params;
+  const cat = route.params.item;
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <SafeAreaView>
-          <View style={styles.headerWrapper}>
-            <Feather name="bell" size={24} color={colors.textDark} />
-            <Image
-              source={require('../assets/images/profile.png')}
-              style={styles.profileImage}
-            />
-          </View>
-     </SafeAreaView>
+        <View style={styles.headerWrapper}>
+          <Feather name="bell" size={24} color={colors.textDark} />
+          <Image
+            source={require('../assets/images/profile.png')}
+            style={styles.profileImage}
+          />
+        </View>
+      </SafeAreaView>
 
-      {/* Titles */}
+   
+      <View style={styles.postTaskSection}>
+        <View style={styles.horizontalLine}></View>
+        <Text style={styles.postTaskText}>Post a Task</Text>
+        <View style={styles.horizontalLine}></View>
+      </View>
+
+      <View style={styles.categoryCartWrapper}>
+        <Text style={styles.categoryText}>{cat}</Text>
+        <MaterialCommunityIcons
+          name="cart"
+          size={24}
+          color={colors.primary}
+          style={styles.cartIcon}
+        />
+      </View>
+
       <View style={styles.titlesWrapper}>
         <Text style={styles.title}>{item.title}</Text>
       </View>
 
-    
-
-      {/* Pizza info */}
-      <View style={styles.infoWrapper}>
-        {/* <View style={styles.infoLeftWrapper}>
-          <View style={styles.infoItemWrapper}>
-            <Text style={styles.infoItemTitle}>Size</Text>
-            <Text style={styles.infoItemText}>
-              {item.sizeName} {item.sizeNumber}"
-            </Text>
-          </View>
-          <View style={styles.infoItemWrapper}>
-            <Text style={styles.infoItemTitle}>Crust</Text>
-            <Text style={styles.infoItemText}>{item.crust}</Text>
-          </View>
-          <View style={styles.infoItemWrapper}>
-            <Text style={styles.infoItemTitle}>Delivery in</Text>
-            <Text style={styles.infoItemText}>{item.deliveryTime} min</Text>
-          </View>
-        </View> */}
-        {/* <View>
-          <Image source={item.image} style={styles.itemImage} />
-        </View> */}
+      <View style={styles.searchWrapper}>
+        <Feather name="search" size={16} color={colors.textDark} />
+        <TextInput
+          style={styles.search}
+          placeholder="Search"
+          value={searchInput}
+          onChangeText={(text) => setSearchInput(text)}
+        />
       </View>
-        {/* Search */}
-        <View style={styles.searchWrapper}>
-          <Feather name="search" size={16} color={colors.textDark} />
-          <TextInput
-            style={styles.search}
-            placeholder="Search"
-            value={searchInput}
-            onChangeText={(text) => setSearchInput(text)}
-          />
-        </View>
 
-      {/* Ingredients */}
-      {/* <View style={styles.ingredientsWrapper}>
-        <Text style={styles.ingredientsTitle}>Ingredients</Text>
-        <View style={styles.ingredientsListWrapper}>
-          <FlatList
-            data={item.ingredients}
-            renderItem={renderIngredientsItem}
-            keyExtractor={(item) => item.id}
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-      </View> */}
+    
+      <View style={styles.inputSection}>
+        <Text style={styles.label}>Items List</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Enter items list here"
+          value={itemsList}
+          onChangeText={(text) => setItemsList(text)}
+        />
+      </View>
 
-      {/* Place an order */}
+    
+      <View style={styles.inputSection}>
+        <Text style={styles.label}>Additional Requests</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Enter additional requests here"
+          value={additionalRequests}
+          onChangeText={(text) => setAdditionalRequests(text)}
+        />
+      </View>
+
       <TouchableOpacity onPress={() => alert('Your order has been placed!')}>
         <View style={styles.orderWrapper}>
           <Text style={styles.orderText}>Look for Volunteers</Text>
@@ -110,13 +95,13 @@ export default Details = ({ route, navigation }) => {
   );
 };
 
-const styles = new StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   headerWrapper: {
     flexDirection: 'row',
-    justifyContent: 'space between',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 20,
     alignItems: 'center',
@@ -127,19 +112,48 @@ const styles = new StyleSheet.create({
     height: 40,
     borderRadius: 40,
   },
-
-  headerLeft: {
-    borderColor: colors.textLight,
-    borderWidth: 2,
-    padding: 12,
-    borderRadius: 10,
+  postTaskSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    justifyContent: 'center',
   },
-  headerRight: {
-    backgroundColor: colors.primary,
-    padding: 12,
-    borderRadius: 10,
-    borderColor: colors.primary,
-    borderWidth: 2,
+  horizontalLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: 'black',
+  },
+  postTaskText: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 24,
+    color: 'black',
+    marginHorizontal: 10,
+  },
+  categoryCartWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  categoryText: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 20,
+    color: 'black',
+  },
+  cartIcon: {
+    marginLeft: 10,
+  },
+  titlesWrapper: {
+    paddingHorizontal: 20,
+    marginTop: 30,
+  },
+  title: {
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 32,
+    color: colors.textDark,
+    width: '50%',
+    height: 20,
   },
   searchWrapper: {
     flexDirection: 'row',
@@ -153,87 +167,22 @@ const styles = new StyleSheet.create({
     borderBottomColor: colors.textLight,
     borderBottomWidth: 2,
   },
-  searchText: {
-    fontFamily: 'Montserrat-Semibold',
-    fontSize: 14,
-    marginBottom: 5,
-    color: colors.textLight,
-  },
-  titlesWrapper: {
-    paddingHorizontal: 20,
-    marginTop: 30,
-  },
-  title: {
+  label: {
     fontFamily: 'Montserrat-Bold',
-    fontSize: 32,
-    color: colors.textDark,
-    width: '50%',
+    fontSize: 20,
+    color: 'black',
   },
-  priceWrapper: {
+  inputSection: {
+    paddingHorizontal: 20,
     marginTop: 20,
-    paddingHorizontal: 20,
   },
-  priceText: {
-    color: colors.price,
-    fontFamily: 'Montserrat-Bold',
-    fontSize: 32,
-  },
-  infoWrapper: {
-    marginTop: 60,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  infoLeftWrapper: {
-    paddingLeft: 20,
-  },
-  infoItemWrapper: {
-    marginBottom: 20,
-  },
-  infoItemTitle: {
-    fontFamily: 'Montserrat-Medium',
-    fontSize: 14,
-    color: colors.textLight,
-  },
-  infoItemText: {
-    fontFamily: 'Montserrat-SemiBold',
-    fontSize: 18,
-    color: colors.textDark,
-  },
-  itemImage: {
-    resizeMode: 'contain',
-    marginLeft: 50,
-  },
-  ingredientsWrapper: {
-    marginTop: 40,
-  },
-  ingredientsTitle: {
-    paddingHorizontal: 20,
-    fontFamily: 'Montserrat-Bold',
+  textInput: {
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 10,
+    padding: 10,
     fontSize: 16,
-    color: colors.textDark,
-  },
-  ingredientsListWrapper: {
-    paddingVertical: 20,
-  },
-  ingredientItemWrapper: {
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    marginRight: 15,
-    borderRadius: 15,
-    shadowColor: colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  ingredientImage: {
-    resizeMode: 'contain',
+    color: 'black',
   },
   orderWrapper: {
     marginTop: 60,
@@ -249,6 +198,6 @@ const styles = new StyleSheet.create({
     fontFamily: 'Montserrat-Bold',
     fontSize: 14,
     marginRight: 10,
-    color: 'white'
+    color: 'white',
   },
 });

@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   TextInput
 } from 'react-native';
+import { Font } from 'expo-font';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import categoriesData from '../assets/data/categoriesData';
@@ -21,33 +22,56 @@ MaterialCommunityIcons.loadFont();
 
 export default Home = ({ navigation }) => {
   const [searchInput, setSearchInput] = React.useState('');
+
+  const handleCategoryPress = (item) => {
+    navigation.navigate('Details', { item: item.title });
+  };
+
+  const handleJoinEvent = (item) => {
+    // Implement your join event logic here
+  };
+
+  const handleViewEvent = (item) => {
+    // Implement your view event logic here
+  };
+
+  const handleProfileImageClick = () => {
+    navigation.navigate('Profile');
+  };
+
+  const handleChatPress = () => {
+    navigation.navigate('Chat');
+  }
+
   const renderCategoryItem = ({ item }) => {
     return (
-      <View
-        style={[
-          styles.categoryItemWrapper,
-          {
-            backgroundColor: item.selected ? colors.primary : colors.white,
-            marginLeft: item.id == 1 ? 20 : 0,
-          },
-        ]}>
-        <Image source={item.image} style={styles.categoryItemImage} />
-        <Text style={styles.categoryItemTitle}>{item.title}</Text>
+      <TouchableOpacity onPress={() => handleCategoryPress(item)}>
         <View
           style={[
-            styles.categorySelectWrapper,
+            styles.categoryItemWrapper,
             {
-              backgroundColor: item.selected ? colors.white : colors.secondary,
+              backgroundColor: item.selected ? colors.primary : colors.white,
+              marginLeft: item.id === 1 ? 20 : 0,
             },
           ]}>
-          <Feather
-            name="chevron-right"
-            size={8}
-            style={styles.categorySelectIcon}
-            color={item.selected ? colors.black : colors.white}
-          />
+          <Image source={item.image} style={styles.categoryItemImage} />
+          <Text style={styles.categoryItemTitle}>{item.title}</Text>
+          <View
+            style={[
+              styles.categorySelectWrapper,
+              {
+                backgroundColor: item.selected ? colors.white : colors.secondary,
+              },
+            ]}>
+            <Feather
+              name="chevron-right"
+              size={8}
+              style={styles.categorySelectIcon}
+              color={item.selected ? colors.black : colors.white}
+            />
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -60,10 +84,13 @@ export default Home = ({ navigation }) => {
         <SafeAreaView>
           <View style={styles.headerWrapper}>
             <Feather name="bell" size={24} color={colors.textDark} />
+            <TouchableOpacity onPress={handleProfileImageClick}>
             <Image
               source={require('../assets/images/profile.png')}
               style={styles.profileImage}
+              
             />
+             </TouchableOpacity>
           </View>
         </SafeAreaView>
 
@@ -85,23 +112,26 @@ export default Home = ({ navigation }) => {
         </View>
 
         {/* Categories */}
+        <TouchableOpacity onPress={handleCategoryPress}>
         <View style={styles.categoriesWrapper}>
           <Text style={styles.servicesTitle}>Services</Text>
           <View style={styles.categoriesListWrapper}>
             <FlatList
               data={categoriesData}
               renderItem={renderCategoryItem}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.id.toString()}
               horizontal={true}
             />
           </View>
         </View>
+        </TouchableOpacity>
 
         {/* Neighbour Chat Button */}
         <TouchableOpacity
           style={styles.neighbourChatButton}
           activeOpacity={0.7}
           onPress={() => {
+            {handleChatPress}
             // Handle Neighbour Chat button press
           }}>
           <LinearGradient
@@ -115,8 +145,9 @@ export default Home = ({ navigation }) => {
             </View>
           </LinearGradient>
         </TouchableOpacity>
-           {/* Popular */}
-           <View style={styles.popularWrapper}>
+        
+        {/* Popular */}
+        <View style={styles.popularWrapper}>
           <Text style={styles.popularTitle}>Events happening near you</Text>
           {popularData.map((item) => (
             <TouchableOpacity
@@ -126,51 +157,38 @@ export default Home = ({ navigation }) => {
                   item: item,
                 })
               }>
-              <View
-                style={[
-                  styles.popularCardWrapper,
-                  {
-                    marginTop: item.id == 1 ? 10 : 20,
-                  },
-                ]}>
-                <View>
-                  <View>
-                    <View style={styles.popularTopWrapper}>
-                      {/* <MaterialCommunityIcons
-                        name="crown"
-                        size={12}
-                        color={colors.primary}
-                      /> */}
-                      <Text style={styles.popularTopText}>Halloween Party</Text>
-                    </View>
-                    <View style={styles.popularTitlesWrapper}>
-                      <Text style={styles.popularTitlesTitle}>
-                        {item.Description}
-                      </Text>
-                      <Text style={styles.popularTitlesWeight}>
-                        Date {item.Date}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.popularCardBottom}>
-                    <View style={styles.addPizzaButton}>
-                      <Feather name="plus" size={10} color={colors.textDark} />
-                    </View>
-                    <View style={styles.ratingWrapper}>
-                      <MaterialCommunityIcons
-                        name="star"
-                        size={10}
-                        color={colors.textDark}
-                      />
-                      <Text style={styles.rating}>{item.rating}</Text>
-                    </View>
-                  </View>
-                </View>
+                <View style={styles.popularCardWrapper}>
+  <Image source={item.image} style={styles.popularCardImage} />
+  <View style={styles.popularContent}>
+    <View style={styles.popularTopWrapper}>
+      <Text style={styles.popularTopText} numberOfLines={2}>Halloween Party</Text>
+    </View>
+    <View style={styles.popularTitlesWrapper}>
+      <Text style={styles.popularTitlesTitle}>{item.Description}</Text>
+      <Text style={styles.popularTitlesWeight}>Date {item.Date}</Text>
+    </View>
+  </View>
+  <View style={styles.actionButtonsWrapper}>
+    <View style={styles.actionButtonContainer}>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.joinEventButton]}
+        onPress={() => handleJoinEvent(item)}
+      >
+        <Text style={styles.actionButtonText}>Join event</Text>
+      </TouchableOpacity>
+    </View>
+    <View style={styles.actionButtonContainer}>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.viewEventButton]}
+        onPress={() => handleViewEvent(item)}
+      >
+        <Text style={styles.actionButtonText}>View Event</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</View>
 
-                <View style={styles.popularCardRight}>
-                  <Image source={item.image} style={styles.popularCardImage} />
-                </View>
-              </View>
+
             </TouchableOpacity>
           ))}
         </View>
@@ -185,7 +203,7 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     flexDirection: 'row',
-    justifyContent: 'space between',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 20,
     alignItems: 'center',
@@ -199,6 +217,12 @@ const styles = StyleSheet.create({
   titlesWrapper: {
     marginTop: 30,
     paddingHorizontal: 20,
+  },
+  joinEventButton: {
+    backgroundColor: 'darkblue',
+  },
+  viewEventButton: {
+    backgroundColor: 'darkgrey',
   },
   Subtitle: {
     color: '#000',
@@ -318,8 +342,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 25,
     paddingTop: 20,
-    paddingLeft: 20,
-    flexDirection: 'row',
+    // paddingBottom:30,
+    paddingLeft: 20, // Add left padding to create space for the buttons
+    // flexbox: 2,
+    flexDirection: 'row', // Use a column layout
+  justifyContent: 'space-between', // Align items at the beginning and end
     overflow: 'hidden',
     shadowColor: colors.black,
     shadowOffset: {
@@ -330,12 +357,16 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
+  popularContent: {
+    flex: 1 // Take up the available space vertically
+  },
+  
   popularTopWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   popularTopText: {
-    marginLeft: 10,
+    marginRight: 70,
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 20,
   },
@@ -344,11 +375,11 @@ const styles = StyleSheet.create({
   },
   popularTitlesTitle: {
     fontFamily: 'Montserrat-SemiBold',
-  fontSize: 12,
-  marginRight:-60,
-  color: colors.textDark,
-  flexWrap: 'wrap', // Allow text to wrap to the next line
-  maxWidth: 200, // Set a maximum width for the text
+    fontSize: 12,
+    marginRight: -60,
+    color: colors.textDark,
+    flexWrap: 'wrap',
+    maxWidth: 200,
   },
   popularTitlesWeight: {
     fontFamily: 'Montserrat-Medium',
@@ -380,13 +411,32 @@ const styles = StyleSheet.create({
     color: colors.textDark,
     marginLeft: 5,
   },
-  popularCardRight: {
-    marginLeft: 40,
+  actionButtonContainer: {
+    overflow: 'visible',
   },
   popularCardImage: {
-    width: 200,
-    height: 125,
+    width: 160,
     resizeMode: 'contain',
-    marginRight:10
   },
+ // Adjusted actionButtonsWrapper
+actionButtonsWrapper: {
+  flexDirection: 'row',
+  // Adjust the margin left to push the buttons to the right
+  marginLeft: 'auto', // Push to the right edge
+},
+
+// Updated styles for "Join event" and "View Event" buttons
+actionButton: {
+  paddingVertical: 10,
+  paddingHorizontal: 20, // Increase horizontal padding for more space
+  borderRadius: 8,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+
+actionButtonText: {
+  color: 'white',
+  fontWeight: 'bold',
+},
 });

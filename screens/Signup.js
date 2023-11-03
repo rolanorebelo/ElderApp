@@ -14,7 +14,7 @@ const countryCodes = [
     // Add more country codes as needed
 ];
 
-const Signup = ({ navigation }) => {
+const SignUp = ({ navigation }) => {
     const [isPasswordShown, setIsPasswordShown] = useState(false);
     const [isChecked, setIsChecked] = useState(false);
     const [selectedCountryCode, setSelectedCountryCode] = useState(countryCodes[0].value);
@@ -302,4 +302,4 @@ const Signup = ({ navigation }) => {
     )
 }
 
-export default Signup;
+export default SignUp;

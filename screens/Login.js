@@ -245,7 +245,7 @@ const Login = ({ navigation }) => {
                 }}>
                     <Text style={{ fontSize: 16, color: COLORS.black }}>Don't have an account ? </Text>
                     <Pressable
-                        onPress={() => navigation.navigate('Signup')}
+                        onPress={() => navigation.navigate('SignUp')}
                     >
                         <Text style={{
                             fontSize: 16,
