@@ -18,6 +18,7 @@ import categoriesData from '../assets/data/categoriesData';
 import popularData from '../assets/data/popularData';
 import colors from '../assets/colors/colors';
 import { LinearGradient } from "expo-linear-gradient";
+import Header from './Header';
 Feather.loadFont();
 MaterialCommunityIcons.loadFont();
 
@@ -78,6 +79,7 @@ export default Home = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+       {/* <Header navigation={navigation} /> */}
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}>
@@ -146,10 +148,17 @@ export default Home = ({ navigation }) => {
             </View>
           </LinearGradient>
         </TouchableOpacity>
-        
+        <View style={styles.container}>
+            <TouchableOpacity
+                onPress={() => navigation.navigate("Chat")}
+                style={styles.chatButton}
+            >
+                <Entypo name="chat" size={24} color={colors.lightGray} />
+            </TouchableOpacity>
+        </View>
         {/* Popular */}
         <View style={styles.popularWrapper}>
-          <Text style={styles.popularTitle}>Events happening near you</Text>
+          {/* <Text style={styles.popularTitle}>Events happening near you</Text>
           {popularData.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -158,15 +167,8 @@ export default Home = ({ navigation }) => {
                   item: item,
                 })
               }>
-                 <View style={styles.container}>
-            <TouchableOpacity
-                onPress={() => navigation.navigate("Chat")}
-                style={styles.chatButton}
-            >
-                <Entypo name="chat" size={24} color={colors.lightGray} />
-            </TouchableOpacity>
-        </View>
-                {/* <View style={styles.popularCardWrapper}>
+                
+                <View style={styles.popularCardWrapper}>
   <Image source={item.image} style={styles.popularCardImage} />
   <View style={styles.popularContent}>
     <View style={styles.popularTopWrapper}>
@@ -195,10 +197,10 @@ export default Home = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   </View>
-</View> */}
+</View>
 
             </TouchableOpacity>
-          ))}
+          ))} */}
         </View>
       </ScrollView>
     </View>

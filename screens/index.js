@@ -5,7 +5,7 @@ import Home from "./Home";
 import Details from "./Details";
 import Profile from "./Profile";
 import Chat from "./Chat";
-
+import VolunteerHome from "./Volunteer/VolunteerHome";
 export {
     Login,
     Welcome,
@@ -13,5 +13,6 @@ export {
     Home,
     Details,
     Profile,
-    Chat
+    Chat,
+    VolunteerHome
 }

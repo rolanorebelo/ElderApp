@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { signOut } from 'firebase/auth'; // Import the signOut function
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation from react-navigation
 import { auth } from '../config/firebase';
-
+import AuthenticatedUserContext from '../AuthenticatedUserContext';
 const Profile = () => {
   const { setUser } = useContext(AuthenticatedUserContext);
   const navigation = useNavigation();

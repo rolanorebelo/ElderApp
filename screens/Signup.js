@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, Button, TextInput, Image, Pressable, SafeAreaVi
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
+import { Picker } from '@react-native-picker/picker';
 // const backImage = require("../assets/backImage.png");
 import { auth, database } from '../config/firebase';
 import {
@@ -21,6 +22,8 @@ export default function SignUp({ navigation }) {
   const [lastName, setLastName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('')
   const [isPasswordShown, setIsPasswordShown] = useState(false);
+  const [userType, setUserType] = useState('normal'); // 'normal' is the default value
+
 
   const onHandleSignup = async () => {
     if (email !== '' && password !== '' && firstName !== '' && lastName !== '') {
@@ -28,7 +31,7 @@ export default function SignUp({ navigation }) {
         // Create a new user in Firebase Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
+  
         // Store additional user information in Firestore
         const usersCollection = collection(database, 'users'); // 'users' is the name of your Firestore collection
         await addDoc(usersCollection, {
@@ -37,8 +40,16 @@ export default function SignUp({ navigation }) {
           mobileNumber: mobileNumber, // Use the mobileNumber state variable
           email: email, // Store email as well if needed
           uid: user.uid, // You can store the user's unique identifier for reference
+          userType: userType, // Add the selected userType
         });
-
+  
+        // Check userType and navigate accordingly
+        if (userType === 'volunteer') {
+          navigation.navigate('VolunteerHome'); // Navigate to VolunteerHome for volunteers
+        } else {
+          navigation.navigate('Home'); // Navigate to Home for normal users
+        }
+  
         console.log('Signup success');
       } catch (err) {
         Alert.alert('Signup error', err.message);
@@ -46,7 +57,7 @@ export default function SignUp({ navigation }) {
     } else {
       Alert.alert('Signup error', 'Please fill in all required fields.');
     }
-  };
+  };  
 
   return (
     <View style={styles.container}>
@@ -79,6 +90,16 @@ export default function SignUp({ navigation }) {
                   resizeMode='contain'
                 />
               </View>
+            </View>
+            <View style={{ marginBottom: 12 }}>
+            <Picker
+                selectedValue={userType}
+                onValueChange={(itemValue) => setUserType(itemValue)}
+                style={styles.input}
+            >
+                <Picker.Item label="Normal User" value="normal" />
+                <Picker.Item label="Volunteer" value="volunteer" />
+            </Picker>
             </View>
             <View style={{ marginBottom: 12 }}>
               <TextInput

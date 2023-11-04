@@ -1,21 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, Button, TextInput, Image, SafeAreaView, TouchableOpacity, StatusBar, Alert } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../config/firebase";
-import COLORS from '../constants/colors'
+import COLORS from '../constants/colors';
+
+// Import Firestore methods for fetching user data
+import { doc, getDoc } from 'firebase/firestore';
+import { collection, database } from '../config/firebase'; // Update with your Firestore config
 
 export default function Login({ navigation }) {
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const onHandleLogin = () => {
+  const onHandleLogin = async () => {
     if (email !== "" && password !== "") {
-      signInWithEmailAndPassword(auth, email, password)
+        signInWithEmailAndPassword(auth, email, password)
         .then(() => console.log("Login success"))
         .catch((err) => Alert.alert("Login error", err.message));
+    //   try {
+    //     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    //     const user = userCredential.user;
+    //     console.log('User:', user);
+    //     console.log('User ID',user.uid);
+    //     console.log('User email',user.email);
+    //       // Fetch the userType from Firestore based on the user's UID
+    //     const userDoc = await getDoc(doc(database, 'users', user.uid));
+    //     console.log('userDoc', userDoc); // Log userDoc instead of user
+  
+    //     if (userDoc.exists()) {
+    //       const userType = userDoc.data().userType;
+  
+    //       if (userType === 'volunteer') {
+    //         navigation.navigate('VolunteerHome'); // Navigate to VolunteerHome for volunteers
+    //       } else {
+    //         navigation.navigate('Home'); // Navigate to Home for normal users
+    //       }
+    //     } else {
+    //       // Handle the case where the userDoc doesn't exist
+    //       Alert.alert("Login error", "User data not found.");
+    //     }
+    //   } catch (error) {
+    //     console.error('Login error:', error);
+    //     Alert.alert("Login error", error.message);
+    //   }
     }
   };
+  
+  
   
   return (
     <View style={styles.container}>
@@ -27,7 +58,7 @@ export default function Login({ navigation }) {
                         fontWeight: 'bold',
                         marginVertical: 12,
                         color: '#0A93DF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.25',
+                        textShadowColor: 'rgba(0, 0, 0, 0.25)',
                         textShadowOffset: { width: 0, height: 4 },
                         textShadowRadius: 4,
                         fontFamily: 'Roboto',

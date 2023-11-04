@@ -10,6 +10,7 @@ import Chat from './screens/Chat';
 import Home from './screens/Home';
 import Profile from './screens/Profile';
 import Details from './screens/Details';
+import VolunteerHome from './screens/Volunteer/VolunteerHome';
 import { Welcome } from './screens';
 import * as Font from 'expo-font';
 import { useFonts } from 'expo-font';
@@ -30,11 +31,21 @@ const AuthenticatedUserProvider = ({ children }) => {
 
 function ChatStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} defaultScreenOptions={Home}>
+    <Stack.Navigator  defaultScreenOptions={Home}>
       <Stack.Screen name='Home' component={Home}/>
       <Stack.Screen name='Chat' component={Chat} />
       <Stack.Screen name='Profile' component={Profile}/>
       <Stack.Screen name='Details' component={Details}/>
+    </Stack.Navigator>
+  );
+}
+
+function VolunteerStack(){
+  return(
+    <Stack.Navigator  defaultScreenOptions={VolunteerHome}>
+      <Stack.Screen options={{
+    title: 'Task Requests', // Change the header name to whatever you want
+  }} name='VolunteerHome' component={VolunteerHome}/>
     </Stack.Navigator>
   );
 }
@@ -83,12 +94,34 @@ function RootNavigator() {
     );
   }
 
-  return (
-    <NavigationContainer>
-       {user ? <ChatStack /> : <AuthStack />}
-    </NavigationContainer>
-  );
+  if (user) {
+    // Check the user's userType (assuming it's a property of the user object)
+    const userType = user.userType; // Adjust this based on your data structure
+    console.log('Userrr',user);
+    if (userType === 'volunteer') {
+      console.log('VOluneer');
+      return (
+        <NavigationContainer>
+          <VolunteerStack />
+        </NavigationContainer>
+      );
+    } else {
+      console.log('Chattt');
+      return (
+        <NavigationContainer>
+          <ChatStack />
+        </NavigationContainer>
+      );
+    }
+  } else {
+    return (
+      <NavigationContainer>
+        <AuthStack />
+      </NavigationContainer>
+    );
+  }
 }
+
 
 export default function App() {
   // let [fontsLoaded] = useFonts({
