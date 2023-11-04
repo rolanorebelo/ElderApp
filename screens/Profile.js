@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient from expo-linear-gradient
+import { LinearGradient } from 'expo-linear-gradient';
+import { signOut } from 'firebase/auth'; // Import the signOut function
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation from react-navigation
+import { auth } from '../config/firebase';
 
 const Profile = () => {
+  const { setUser } = useContext(AuthenticatedUserContext);
+  const navigation = useNavigation();
+
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -35,11 +41,18 @@ const Profile = () => {
     // Update the user's profile information
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth); // Sign out the user
+      setUser(null); // Clear the user context
+      navigation.navigate('Welcome'); // Navigate to the login page
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
-    <LinearGradient // Use LinearGradient for the background gradient
-    colors={['blue', 'white']}
-    style={styles.container}
-  >
+    <LinearGradient colors={['blue', 'white']} style={styles.container}>
       <Image
         source={require('../assets/images/profile.png')}
         style={styles.profileImage}
@@ -83,7 +96,10 @@ const Profile = () => {
        <View style={styles.updateButtonContainer}>
         <Button color="black" title="Update" onPress={handleSubmit} />
       </View>
-      </LinearGradient>
+      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>Sign Out</Text>
+      </TouchableOpacity>
+    </LinearGradient>
   );
 };
 
@@ -108,13 +124,14 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     backgroundColor: 'white'
   },
-  updateButtonContainer: {
-    backgroundColor: 'black',
-    padding: 10, // Add padding to style the button container
-    borderRadius: 8, // Adjust this value as needed
-    width: 300
+  signOutButton: {
+    backgroundColor: 'red', // You can change the color to your preference
+    padding: 10,
+    borderRadius: 8,
+    width: 150,
+    alignItems: 'center',
+    marginTop: 20,
   },
-  
 });
 
 export default Profile;

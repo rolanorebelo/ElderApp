@@ -11,6 +11,7 @@ import {
   TextInput
 } from 'react-native';
 import { Font } from 'expo-font';
+import { Entypo } from '@expo/vector-icons';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import categoriesData from '../assets/data/categoriesData';
@@ -131,7 +132,7 @@ export default Home = ({ navigation }) => {
           style={styles.neighbourChatButton}
           activeOpacity={0.7}
           onPress={() => {
-            {handleChatPress}
+            navigation.navigate('Chat')
             // Handle Neighbour Chat button press
           }}>
           <LinearGradient
@@ -157,7 +158,15 @@ export default Home = ({ navigation }) => {
                   item: item,
                 })
               }>
-                <View style={styles.popularCardWrapper}>
+                 <View style={styles.container}>
+            <TouchableOpacity
+                onPress={() => navigation.navigate("Chat")}
+                style={styles.chatButton}
+            >
+                <Entypo name="chat" size={24} color={colors.lightGray} />
+            </TouchableOpacity>
+        </View>
+                {/* <View style={styles.popularCardWrapper}>
   <Image source={item.image} style={styles.popularCardImage} />
   <View style={styles.popularContent}>
     <View style={styles.popularTopWrapper}>
@@ -186,8 +195,7 @@ export default Home = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   </View>
-</View>
-
+</View> */}
 
             </TouchableOpacity>
           ))}
@@ -201,6 +209,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  chatButton: {
+    backgroundColor: colors.primary,
+    height: 50,
+    width: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: {
+        width: 0,
+        height: 2,
+    },
+    shadowOpacity: .9,
+    shadowRadius: 8,
+    marginRight: 20,
+    marginBottom: 50,
+},
   headerWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
