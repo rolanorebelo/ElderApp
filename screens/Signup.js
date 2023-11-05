@@ -1,67 +1,74 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Button, TextInput, Image, Pressable, SafeAreaView, TouchableOpacity, StatusBar, Alert, ScrollView } from "react-native";
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import { Picker } from '@react-native-picker/picker';
-// const backImage = require("../assets/backImage.png");
 import { auth, database } from '../config/firebase';
-import {
-  collection,
-  addDoc,
-  orderBy,
-  query,
-  onSnapshot
-} from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+const functions = getFunctions();
+
+async function storeVolunteerData(userId, userData) {
+  const volunteerDocRef = doc(database, 'volunteer', userId);
+  await setDoc(volunteerDocRef, userData);
+}
 
 export default function SignUp({ navigation }) {
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('')
   const [isPasswordShown, setIsPasswordShown] = useState(false);
+  const [location,setLocation] = useState('')
   const [userType, setUserType] = useState('normal'); // 'normal' is the default value
 
-
-  const onHandleSignup = async () => {
-    if (email !== '' && password !== '' && firstName !== '' && lastName !== '') {
-      try {
-        // Create a new user in Firebase Authentication
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const onHandleSignup = () => {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(async (userCredential) => {
         const user = userCredential.user;
-  
-        // Store additional user information in Firestore
-        const usersCollection = collection(database, 'users'); // 'users' is the name of your Firestore collection
-        await addDoc(usersCollection, {
-          firstName: firstName, // Use the firstName state variable
-          lastName: lastName, // Use the lastName state variable
-          mobileNumber: mobileNumber, // Use the mobileNumber state variable
-          email: email, // Store email as well if needed
-          uid: user.uid, // You can store the user's unique identifier for reference
-          userType: userType, // Add the selected userType
-        });
-  
-        // Check userType and navigate accordingly
-        if (userType === 'volunteer') {
-          navigation.navigate('VolunteerHome'); // Navigate to VolunteerHome for volunteers
-        } else {
-          navigation.navigate('Home'); // Navigate to Home for normal users
-        }
-  
-        console.log('Signup success');
-      } catch (err) {
-        Alert.alert('Signup error', err.message);
-      }
-    } else {
-      Alert.alert('Signup error', 'Please fill in all required fields.');
-    }
-  };  
+
+        updateProfile(user, {
+          displayName: `${firstName} ${lastName}`,
+        })
+          .then(async () => {
+            const userDocRef = doc(database, 'users', user.uid);
+            const userData = {
+              firstName,
+              lastName,
+              mobileNumber,
+              email,
+              userType,
+              location
+              // Add other fields as needed
+            };
+
+            if (userType === 'volunteer') {
+              await storeVolunteerData(user.uid, userData);
+            } else {
+              await setDoc(userDocRef, userData);
+            }
+
+            const setCustomClaimsFunction = httpsCallable(functions, 'setCustomClaims');
+            await setCustomClaimsFunction({ userId: user.uid, role: userType });
+
+            console.log('User data stored successfully');
+            console.log('Role: ', userType);
+            console.log('User display name: ', user.displayName);
+          })
+          .catch((error) => {
+            console.error('Error updating profile:', error);
+          });
+      })
+      .catch((error) => {
+        console.error('Error creating user:', error);
+      });
+  };
 
   return (
     <View style={styles.container}>
-      {/* <Image source={backImage} style={styles.backImage} /> */}
       <View style={styles.whiteSheet} />
       <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -92,14 +99,14 @@ export default function SignUp({ navigation }) {
               </View>
             </View>
             <View style={{ marginBottom: 12 }}>
-            <Picker
+              <Picker
                 selectedValue={userType}
                 onValueChange={(itemValue) => setUserType(itemValue)}
                 style={styles.input}
-            >
+              >
                 <Picker.Item label="Normal User" value="normal" />
                 <Picker.Item label="Volunteer" value="volunteer" />
-            </Picker>
+              </Picker>
             </View>
             <View style={{ marginBottom: 12 }}>
               <TextInput
@@ -155,48 +162,36 @@ export default function SignUp({ navigation }) {
                 )}
               </TouchableOpacity>
             </View>
-            {/* <View style={{ marginBottom: 12 }}>
-              <TextInput
-                  placeholder='Confirm Password'
-                  placeholderTextColor={COLORS.black}
-                  secureTextEntry={isPasswordShown}
-                  style={{
-                      height: 48,
-                      borderColor: COLORS.black,
-                      borderWidth: 1,
-                      borderRadius: 8,
-                      paddingLeft: 22
-                  }}
-              />
-          </View> */}
             <View style={{
               flexDirection: 'row',
               alignItems: 'center',
               marginBottom: 12
             }}>
-              {/* <Picker
-                  style={{ flex: 1 }}
-                  selectedValue={selectedCountryCode}
-                  onValueChange={(itemValue, itemIndex) => setSelectedCountryCode(itemValue)}
-              >
-                  {countryCodes.map((country, index) => (
-                      <Picker.Item key={index} label={country.label} value={country.value} />
-                  ))}
-              </Picker> */}
               <TextInput
                 placeholder='Mobile Number'
                 placeholderTextColor={COLORS.black}
                 keyboardType='numeric'
-                style={{ backgroundColor: "#F6F7FB",
-                height: 58,
-                marginBottom: 20,
-                fontSize: 16,
-                borderRadius: 10,
-                padding: 12,
-                width: 300}}
+                style={{
+                  backgroundColor: "#F6F7FB",
+                  height: 58,
+                  marginBottom: 20,
+                  fontSize: 16,
+                  borderRadius: 10,
+                  padding: 12,
+                  width: 300
+                }}
                 autoCorrect={false}
                 value={mobileNumber}
                 onChangeText={(text) => setMobileNumber(text)}
+              />
+            </View>
+            <View style={{ marginBottom: 12 }}>
+              <TextInput
+                placeholder='Location'
+                placeholderTextColor={COLORS.black}
+                style={styles.input}
+                value={location}
+                onChangeText={(text) => setLocation(text)}
               />
             </View>
             <TouchableOpacity style={styles.button} onPress={onHandleSignup}>
@@ -233,13 +228,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: "orange",
-    alignSelf: "center",
-    paddingBottom: 24,
-  },
   input: {
     backgroundColor: "#F6F7FB",
     height: 58,
@@ -248,13 +236,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
   },
-  backImage: {
-    width: "100%",
-    height: 340,
-    position: "absolute",
-    top: 0,
-    resizeMode: 'cover',
-  },
   whiteSheet: {
     width: '100%',
     height: '75%',
@@ -262,11 +243,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: '#fff',
     borderTopLeftRadius: 60,
-  },
-  form: {
-    flex: 1,
-    justifyContent: 'center',
-    marginHorizontal: 30,
   },
   button: {
     marginTop: 18,
