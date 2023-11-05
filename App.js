@@ -9,13 +9,13 @@ import SignUp from './screens/SignUp';
 import Chat from './screens/Chat';
 import Home from './screens/Home';
 import Profile from './screens/Profile';
-import Details from './screens/Details';
+import TaskDetails from './screens/TaskDetails';
 import VolunteerHome from './screens/Volunteer/VolunteerHome';
-import { Welcome } from './screens';
+import { LoadingScreen, MatchedVolunteers, Welcome } from './screens';
 import * as Font from 'expo-font';
 import { useFonts } from 'expo-font';
 import AuthenticatedUserContext from './AuthenticatedUserContext';
-
+// import firebaseAuth from './firebaseConfig';
 const Stack = createNativeStackNavigator();
 // const AuthenticatedUserContext = createContext({});
 
@@ -31,11 +31,37 @@ const AuthenticatedUserProvider = ({ children }) => {
 
 function ChatStack() {
   return (
-    <Stack.Navigator  defaultScreenOptions={Home}>
-      <Stack.Screen name='Home' component={Home}/>
-      <Stack.Screen name='Chat' component={Chat} />
-      <Stack.Screen name='Profile' component={Profile}/>
-      <Stack.Screen name='Details' component={Details}/>
+    <Stack.Navigator>
+      <Stack.Screen
+        name='Home'
+        component={Home}
+        options={{ headerShown: false }} // Hide the header for Home screen
+      />
+      <Stack.Screen
+        name='Chat'
+        component={Chat}
+        options={{ title: 'Chat' }} // Show the header for Chat screen
+      />
+      <Stack.Screen
+        name='Profile'
+        component={Profile}
+        options={{ headerShown: false }} // Hide the header for Profile screen
+      />
+      <Stack.Screen
+        name='TaskDetails'
+        component={TaskDetails}
+        options={{ title: 'Task Details' }} // Hide the header for TaskDetails screen
+      />
+      <Stack.Screen
+        name="LoadingScreen"
+        component={LoadingScreen}
+        options={{ headerShown: false }} // Hide the header for LoadingScreen
+      />
+       <Stack.Screen
+        name="MatchedVolunteers"
+        component={MatchedVolunteers}
+        options={{ title: 'Select a Volunteer' }}  // Hide the header for LoadingScreen
+      />
     </Stack.Navigator>
   );
 }

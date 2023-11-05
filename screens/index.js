@@ -2,17 +2,21 @@ import Login from "./Login";
 import Welcome from "./Welcome";
 import SignUp from "./SignUp";
 import Home from "./Home";
-import Details from "./Details";
+import TaskDetails from "./TaskDetails";
 import Profile from "./Profile";
 import Chat from "./Chat";
 import VolunteerHome from "./Volunteer/VolunteerHome";
+import LoadingScreen from "./LoadingScreen";
+import MatchedVolunteers from "./MatchedVolunteers";
 export {
     Login,
     Welcome,
     SignUp,
     Home,
-    Details,
+    TaskDetails,
     Profile,
     Chat,
-    VolunteerHome
+    VolunteerHome,
+    LoadingScreen,
+    MatchedVolunteers
 }

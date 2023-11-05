@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,16 +19,49 @@ import popularData from '../assets/data/popularData';
 import colors from '../assets/colors/colors';
 import { LinearGradient } from "expo-linear-gradient";
 import Header from './Header';
+import { auth } from '../config/firebase';
 Feather.loadFont();
 MaterialCommunityIcons.loadFont();
 
 export default Home = ({ navigation }) => {
-  const [searchInput, setSearchInput] = React.useState('');
-
+  const [searchInput, setSearchInput] = useState('');
+  const [userName, setUserName] = useState(null);
   const handleCategoryPress = (item) => {
-    navigation.navigate('Details', { item: item.title });
+    navigation.navigate('TaskDetails', {
+      item: item.title,
+      serviceType: item.title, // Pass the selected service type
+    });
+  };
+  useEffect(() => {
+    // Listen for authentication state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in, update the user's display name
+        setUserName(user.displayName);
+      } else {
+        // User is signed out, or the user data isn't available
+        setUserName(null);
+      }
+    });
+
+    // Unsubscribe when the component unmounts
+    return () => unsubscribe();
+  }, []);
+  
+  const getGreeting = () => {
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+
+    if (currentHour < 12) {
+      return 'Good morning';
+    } else if (currentHour < 18) {
+      return 'Good afternoon';
+    } else {
+      return 'Good evening';
+    }
   };
 
+  //const userName = auth.currentUser.displayName;
   const handleJoinEvent = (item) => {
     // Implement your join event logic here
   };
@@ -99,7 +132,9 @@ export default Home = ({ navigation }) => {
 
         {/* Titles */}
         <View style={styles.titlesWrapper}>
-          <Text style={styles.Subtitle}>Good Morning, Rolano</Text>
+        <Text style={styles.Subtitle}>
+            {`${getGreeting()}, ${userName}`}
+          </Text>
           <Text style={styles.Title}>What are you looking for today?</Text>
         </View>
 
@@ -148,14 +183,14 @@ export default Home = ({ navigation }) => {
             </View>
           </LinearGradient>
         </TouchableOpacity>
-        <View style={styles.container}>
+        {/* <View style={styles.container}>
             <TouchableOpacity
                 onPress={() => navigation.navigate("Chat")}
                 style={styles.chatButton}
             >
                 <Entypo name="chat" size={24} color={colors.lightGray} />
             </TouchableOpacity>
-        </View>
+        </View> */}
         {/* Popular */}
         <View style={styles.popularWrapper}>
           {/* <Text style={styles.popularTitle}>Events happening near you</Text>
