@@ -16,8 +16,10 @@ import colors from '../assets/colors/colors';
 
 const TaskDetails = ({ route, navigation }) => {
   const [searchInput, setSearchInput] = useState('');
-  const [itemsList, setItemsList] = useState('');
+  const [serviceDesc, setServiceDescription] = useState('');
   const [additionalRequests, setAdditionalRequests] = useState('');
+  const [location,setPickup] = useState('')
+  const [destination,setDestination] = useState('')
   const { item, serviceType } = route.params;
 
   // Function to post a task to Firebase Firestore
@@ -41,32 +43,32 @@ const TaskDetails = ({ route, navigation }) => {
       // Based on the serviceType, set the appropriate fields in taskDescription
       switch (serviceType) {
         case 'Groceries':
-          taskDescription = {
+          taskDescription = {                                             
             user_name: displayName,
             user_id: uid,
-            itemsList,
+            serviceDesc,
           };
           break;
         case 'Repair':
           taskDescription = {
             user_name: displayName,
             user_id: uid,
-            repair_description: itemsList,
+            repair_description: serviceDesc,
           };
           break;
         case 'Transport':
           taskDescription = {
             user_name: displayName,
             user_id: uid,
-            pickup_location: itemsList,
-            destination: additionalRequests,
+            pickup_location: location,
+            destination: destination,
           };
           break;
         case 'Cooking':
           taskDescription = {
             user_name: displayName,
             user_id: uid,
-            dish_name: itemsList,
+            dish_name: serviceDesc,
           };
           break;
         default:
@@ -74,7 +76,7 @@ const TaskDetails = ({ route, navigation }) => {
           taskDescription = {
             user_name: displayName,
             user_id: uid,
-            custom_description: itemsList,
+            custom_description: serviceDesc,
           };
           break;
       }
@@ -93,7 +95,7 @@ const TaskDetails = ({ route, navigation }) => {
 
         // Notify the user that the task has been posted
         navigation.navigate('LoadingScreen', { taskId: taskId.id });
-        alert('Task posted successfully!');
+        //alert('Task posted successfully!');
       } catch (error) {
         console.error('Error posting task: ', error);
         // Handle the error as needed
@@ -115,8 +117,8 @@ const TaskDetails = ({ route, navigation }) => {
             <TextInput
               style={styles.textInput}
               placeholder="Enter items list here"
-              value={itemsList}
-              onChangeText={(text) => setItemsList(text)}
+              value={serviceDesc}
+              onChangeText={(text) => setServiceDescription(text)}
             />
           </View>
           <View style={styles.inputSection}>
@@ -140,8 +142,8 @@ const TaskDetails = ({ route, navigation }) => {
             <TextInput
               style={styles.textInput}
               placeholder="Enter repair description here"
-              value={itemsList}
-              onChangeText={(text) => setItemsList(text)}
+              value={serviceDesc}
+              onChangeText={(text) => setServiceDescription(text)}
             />
           </View>
           <View style={styles.inputSection}>
@@ -165,8 +167,8 @@ const TaskDetails = ({ route, navigation }) => {
             <TextInput
               style={styles.textInput}
               placeholder="Enter pickup location here"
-              value={itemsList}
-              onChangeText={(text) => setItemsList(text)}
+              value={location}
+              onChangeText={(text) => setPickup(text)}
             />
           </View>
           <View style={styles.inputSection}>
@@ -174,8 +176,8 @@ const TaskDetails = ({ route, navigation }) => {
             <TextInput
               style={styles.textInput}
               placeholder="Enter destination here"
-              value={additionalRequests}
-              onChangeText={(text) => setAdditionalRequests(text)}
+              value={destination}
+              onChangeText={(text) => setDestination(text)}
             />
           </View>
         </>
@@ -190,8 +192,8 @@ const TaskDetails = ({ route, navigation }) => {
             <TextInput
               style={styles.textInput}
               placeholder="Enter dish name here"
-              value={itemsList}
-              onChangeText={(text) => setItemsList(text)}
+              value={serviceDesc}
+              onChangeText={(text) => setServiceDescription(text)}
             />
           </View>
           <View style={styles.inputSection}>
