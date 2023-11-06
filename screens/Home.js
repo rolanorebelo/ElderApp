@@ -19,13 +19,63 @@ import popularData from '../assets/data/popularData';
 import colors from '../assets/colors/colors';
 import { LinearGradient } from "expo-linear-gradient";
 import Header from './Header';
-import { auth } from '../config/firebase';
+import { auth, database, firestore} from '../config/firebase';
+import { getFirestore, collection, doc, getDoc } from 'firebase/firestore';
 Feather.loadFont();
 MaterialCommunityIcons.loadFont();
 
 export default Home = ({ navigation }) => {
   const [searchInput, setSearchInput] = useState('');
   const [userName, setUserName] = useState(null);
+  const [profilePicture, setUserProfilePicture] = useState();
+  const eventData = [
+    {
+      id: 1,
+      image: require('../assets/images/Food.png'),
+      date: 'Nov 15, 2023',
+      name: 'Community Cleanup',
+      description: 'Join us for a community cleanup event to make our neighborhood cleaner and greener.',
+    },
+    {
+      id: 2,
+      image: require('../assets/images/pizza1.png'),
+      date: 'Nov 20, 2023',
+      name: 'Food Drive',
+      description: 'Help us collect food for those in need. Let\'s make a difference together.',
+    },
+    // Add more event data as needed
+  ];
+  const renderEventTile = (event) => {
+    return (
+      <View key={event.id} style={styles.popularCardWrapper}>
+        <View style={styles.popularContent}>
+          <View style={styles.popularTopWrapper}>
+            <Text style={styles.popularTopText}>{event.date}</Text>
+          </View>
+          <View style={styles.popularTitlesWrapper}>
+            <Text style={styles.popularTitlesTitle}>{event.name}</Text>
+            <Text style={styles.popularTitlesWeight}>{event.description}</Text>
+          </View>
+          <View style={styles.popularCardBottom}>
+            <View style={styles.actionButtonsWrapper}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                onPress={() => handleJoinEvent(event)}>
+                <Text style={styles.actionButtonText}>Join Event</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+                onPress={() => handleViewEvent(event)}>
+                <Text style={styles.actionButtonText}>View Event</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+        <Image source={event.image} style={styles.popularCardImage} />
+      </View>
+    );
+  };
+
   const handleCategoryPress = (item) => {
     navigation.navigate('TaskDetails', {
       item: item.title,
@@ -33,20 +83,32 @@ export default Home = ({ navigation }) => {
     });
   };
   useEffect(() => {
-    // Listen for authentication state changes
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        // User is signed in, update the user's display name
         setUserName(user.displayName);
+      
+        // Query Firestore to get the user's profile picture URL
+        const userRef = doc(getFirestore(), 'users', user.uid); // Use doc to reference a document
+      
+        getDoc(userRef) // Use getDoc to get the document data
+          .then((doc) => {
+            if (doc.exists()) {
+              const userData = doc.data();
+              if (userData.profilePicture) {
+                setUserProfilePicture(userData.profilePicture);
+              }
+            }
+          })
+          .catch((error) => {
+            console.error('Error fetching user data: ', error);
+          });
       } else {
-        // User is signed out, or the user data isn't available
         setUserName(null);
       }
     });
 
-    // Unsubscribe when the component unmounts
     return () => unsubscribe();
-  }, []);
+  }, [profilePicture]);
   
   const getGreeting = () => {
     const currentTime = new Date();
@@ -71,7 +133,9 @@ export default Home = ({ navigation }) => {
   };
 
   const handleProfileImageClick = () => {
-    navigation.navigate('Profile');
+    navigation.navigate('Profile', {
+      profilePicture: profilePicture,
+    });
   };
 
   const handleChatPress = () => {
@@ -122,10 +186,13 @@ export default Home = ({ navigation }) => {
             <Feather name="bell" size={24} color={colors.textDark} />
             <TouchableOpacity onPress={handleProfileImageClick}>
             <Image
-              source={require('../assets/images/profile.png')}
-              style={styles.profileImage}
-              
-            />
+        source={
+          profilePicture
+            ? { uri: profilePicture }
+            : require('../assets/default.png') // Use a default image if no profile picture is available
+        }
+        style={styles.profileImage}
+      />
              </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -137,19 +204,6 @@ export default Home = ({ navigation }) => {
           </Text>
           <Text style={styles.Title}>What are you looking for today?</Text>
         </View>
-
-        {/* Search */}
-        <View style={styles.searchWrapper}>
-          <Feather name="search" size={16} color={colors.textDark} />
-          <TextInput
-            style={styles.search}
-            placeholder="Search"
-            value={searchInput}
-            onChangeText={(text) => setSearchInput(text)}
-          />
-        </View>
-
-        {/* Categories */}
         <TouchableOpacity onPress={handleCategoryPress}>
         <View style={styles.categoriesWrapper}>
           <Text style={styles.servicesTitle}>Services</Text>
@@ -183,60 +237,11 @@ export default Home = ({ navigation }) => {
             </View>
           </LinearGradient>
         </TouchableOpacity>
-        {/* <View style={styles.container}>
-            <TouchableOpacity
-                onPress={() => navigation.navigate("Chat")}
-                style={styles.chatButton}
-            >
-                <Entypo name="chat" size={24} color={colors.lightGray} />
-            </TouchableOpacity>
-        </View> */}
-        {/* Popular */}
-        <View style={styles.popularWrapper}>
-          {/* <Text style={styles.popularTitle}>Events happening near you</Text>
-          {popularData.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() =>
-                navigation.navigate('Details', {
-                  item: item,
-                })
-              }>
-                
-                <View style={styles.popularCardWrapper}>
-  <Image source={item.image} style={styles.popularCardImage} />
-  <View style={styles.popularContent}>
-    <View style={styles.popularTopWrapper}>
-      <Text style={styles.popularTopText} numberOfLines={2}>Halloween Party</Text>
-    </View>
-    <View style={styles.popularTitlesWrapper}>
-      <Text style={styles.popularTitlesTitle}>{item.Description}</Text>
-      <Text style={styles.popularTitlesWeight}>Date {item.Date}</Text>
-    </View>
-  </View>
-  <View style={styles.actionButtonsWrapper}>
-    <View style={styles.actionButtonContainer}>
-      <TouchableOpacity
-        style={[styles.actionButton, styles.joinEventButton]}
-        onPress={() => handleJoinEvent(item)}
-      >
-        <Text style={styles.actionButtonText}>Join event</Text>
-      </TouchableOpacity>
-    </View>
-    <View style={styles.actionButtonContainer}>
-      <TouchableOpacity
-        style={[styles.actionButton, styles.viewEventButton]}
-        onPress={() => handleViewEvent(item)}
-      >
-        <Text style={styles.actionButtonText}>View Event</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</View>
+        <Text style={styles.popularTitle}>Events Happening Near You</Text>
 
-            </TouchableOpacity>
-          ))} */}
-        </View>
+        {/* Render event tiles */}
+        {eventData.map((event) => renderEventTile(event))}
+        
       </ScrollView>
     </View>
   );
@@ -401,6 +406,7 @@ const styles = StyleSheet.create({
     fontSize: 29,
   },
   popularCardWrapper: {
+    marginBottom: 10,
     backgroundColor: colors.white,
     borderRadius: 25,
     paddingTop: 20,

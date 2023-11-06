@@ -62,6 +62,7 @@ function ChatStack() {
         component={MatchedVolunteers}
         options={{ title: 'Select a Volunteer' }}  // Hide the header for LoadingScreen
       />
+      <Stack.Screen name='Login' component={Login}  options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
@@ -72,6 +73,7 @@ function VolunteerStack(){
       <Stack.Screen options={{
     title: 'Task Requests', // Change the header name to whatever you want
   }} name='VolunteerHome' component={VolunteerHome}/>
+  <Stack.Screen name='Login' component={Login} />
     </Stack.Navigator>
   );
 }

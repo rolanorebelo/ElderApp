@@ -2,70 +2,50 @@ import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signOut } from 'firebase/auth'; // Import the signOut function
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation from react-navigation
-import { auth } from '../config/firebase';
+import { useRoute, useNavigation } from '@react-navigation/native'; // Import useNavigation from react-navigation
+import { auth, database } from '../config/firebase';
 import * as ImagePicker from 'expo-image-picker';
 import AuthenticatedUserContext from '../AuthenticatedUserContext';
 import colors from '../constants/colors';
 import { firestore, storage } from '../config/firebase';
+import { doc, setDoc , updateDoc} from 'firebase/firestore';
 
 const Profile = () => {
   const { setUser } = useContext(AuthenticatedUserContext);
   const navigation = useNavigation();
-
+  const route = useRoute();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [interests, setInterests] = useState('');
-  const requestPermission = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to make this work!');
-    }
-  };
-  
+  const [profilePicture, setProfilePicture] = useState(null);
+
   useEffect(() => {
-    requestPermission();
-  }, []);
-  
-  const handleImageUpload = async (imageUri) => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
-  
-        // Create a storage reference using the user's UID as part of the path
-        const storageRef = storage.ref().child(`profileImages/${user.uid}`);
-  
-        await storageRef.put(blob);
-        const downloadURL = await storageRef.getDownloadURL();
-  
-        setProfileImage(downloadURL);
+    setProfilePicture(route.params.profilePicture);
+    
+    return () => {
+      // This code runs when the component is unmounted
+      if (profilePicture !== route.params.profilePicture) {
+        // If the profile picture has changed, navigate back to Home with the updated picture
+        navigation.navigate('Home', {
+          profilePicture: profilePicture, // Pass the updated profile picture
+        });
       }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    }
-  };
+    };
+  }, [route.params.profilePicture, profilePicture]);
   
-  const handleSubmit = async () => {
-    try {
-      // Update the user's profile information in Firestore.
-      await firestore.collection('users').doc(auth.currentUser.uid).update({
-        username,
-        email,
-        phoneNumber,
-        interests,
-        profileImage,
-      });
+  // const requestPermission = async () => {
+  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //   if (status !== 'granted') {
+  //     alert('Sorry, we need camera roll permissions to make this work!');
+  //   }
+  // };
   
-      console.log('Profile information updated successfully.');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
-  
+  // useEffect(() => {
+  //   requestPermission();
+  // }, []);
+
   const handleChangePicture = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -74,12 +54,44 @@ const Profile = () => {
       quality: 1,
     });
   
-    if (!result.canceled) {
-     
-      const selectedImage = result.assets[0];
-    
-    // Upload the selected image to Firebase Storage.
-    handleImageUpload(selectedImage.uri);
+    if (!result.cancelled) {
+      const selectedImage = result.assets[0].uri;
+  
+      // Update the profile image state with the selected image URI
+      setProfilePicture(selectedImage);
+  
+      // After handling the image selection, update the profile image URI in Firestore.
+      try {
+        const userDocRef = doc(database, 'users', auth.currentUser.uid);
+        await updateDoc(userDocRef, {
+          profilePicture: selectedImage, // Update the profile image URI
+        });
+        console.log('Profile image updated successfully.');
+      } catch (error) {
+        console.error('Error updating profile image:', error);
+      }
+    }
+  };
+  
+  
+  const handleSubmit = async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(database, 'users', user.uid);
+
+        await updateDoc(userDocRef, {
+          username,
+          email,
+          phoneNumber,
+          interests,
+          profilePicture,
+        });
+
+        console.log('Profile information updated successfully.');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
   };
   
@@ -118,8 +130,12 @@ const Profile = () => {
 
   return (
     <LinearGradient colors={['blue', 'white']} style={styles.container}>
-      <Image
-        source={require('../assets/images/profile.png')}
+       <Image
+        source={
+          profilePicture
+            ? { uri: profilePicture }
+            : require('../assets/default.png') // Use a default image if no profile picture is available
+        }
         style={styles.profileImage}
       />
       <TouchableOpacity onPress={handleChangePicture}>

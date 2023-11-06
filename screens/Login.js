@@ -14,37 +14,29 @@ export default function Login({ navigation }) {
 
   const onHandleLogin = async () => {
     if (email !== "" && password !== "") {
-        signInWithEmailAndPassword(auth, email, password)
-        .then(() => console.log("Login success"))
-        .catch((err) => Alert.alert("Login error", err.message));
-    //   try {
-    //     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    //     const user = userCredential.user;
-    //     console.log('User:', user);
-    //     console.log('User ID',user.uid);
-    //     console.log('User email',user.email);
-    //       // Fetch the userType from Firestore based on the user's UID
-    //     const userDoc = await getDoc(doc(database, 'users', user.uid));
-    //     console.log('userDoc', userDoc); // Log userDoc instead of user
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
   
-    //     if (userDoc.exists()) {
-    //       const userType = userDoc.data().userType;
-  
-    //       if (userType === 'volunteer') {
-    //         navigation.navigate('VolunteerHome'); // Navigate to VolunteerHome for volunteers
-    //       } else {
-    //         navigation.navigate('Home'); // Navigate to Home for normal users
-    //       }
-    //     } else {
-    //       // Handle the case where the userDoc doesn't exist
-    //       Alert.alert("Login error", "User data not found.");
-    //     }
-    //   } catch (error) {
-    //     console.error('Login error:', error);
-    //     Alert.alert("Login error", error.message);
-    //   }
+        // Fetch the user's custom claims
+        const idTokenResult = await user.getIdTokenResult();
+        const customClaims = idTokenResult.claims;
+        const role = customClaims.role; // Assuming 'role' is the custom claim set by the Cloud Function
+  console.log('claims',customClaims);
+
+        // Check the user's role and navigate accordingly
+        if (role === 'volunteer') {
+          navigation.navigate('VolunteerHome');
+        } else {
+          navigation.navigate('Home');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        Alert.alert("Login error", error.message);
+      }
     }
   };
+  
   
   
   

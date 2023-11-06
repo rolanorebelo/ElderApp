@@ -7,6 +7,8 @@ import { Picker } from '@react-native-picker/picker';
 import { auth, database } from '../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import defaultProfilePic from '../assets/default.png'; // Import the default profile picture
+import * as ImagePicker from 'expo-image-picker';
 
 const functions = getFunctions();
 
@@ -24,6 +26,20 @@ export default function SignUp({ navigation }) {
   const [isPasswordShown, setIsPasswordShown] = useState(false);
   const [location,setLocation] = useState('')
   const [userType, setUserType] = useState('normal'); // 'normal' is the default value
+  const [profilePicture, setProfilePicture] = useState();
+
+  const handleChooseProfilePicture = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      alert('Permission to access the media library is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync();
+    if (!result.cancelled) {
+      setProfilePicture(result.uri);
+    }
+  };
 
   const onHandleSignup = () => {
     createUserWithEmailAndPassword(auth, email, password)
@@ -41,7 +57,8 @@ export default function SignUp({ navigation }) {
               mobileNumber,
               email,
               userType,
-              location
+              location,
+              profilePicture: profilePicture ? profilePicture : require('../assets/default.png')
               // Add other fields as needed
             };
 
@@ -61,6 +78,7 @@ export default function SignUp({ navigation }) {
           .catch((error) => {
             console.error('Error updating profile:', error);
           });
+          navigation.navigate('Login');
       })
       .catch((error) => {
         console.error('Error creating user:', error);
@@ -98,7 +116,29 @@ export default function SignUp({ navigation }) {
                 />
               </View>
             </View>
-            <View style={{ marginBottom: 12 }}>
+            <TouchableOpacity onPress={handleChooseProfilePicture}>
+            {profilePicture ? (
+                <Image
+                source={{ uri: profilePicture }}
+                style={{ width: 150, height: 150, borderRadius: 75 }}
+              />
+            ) : (
+                <View style={{ width: 150, height: 150, backgroundColor: '#E0E0E0', borderRadius: 75, alignItems: 'center', justifyContent: 'center' }}>
+                {profilePicture ? (
+                     <Image
+                     source={profilePicture ? { uri: profilePicture } : require('../assets/default.png')} // Use default profile pic if profilePicture is not available
+                    style={{ width: 150, height: 150, borderRadius: 75 }}
+                  />
+                ) : (
+                    <View style={{ width: 150, height: 150, backgroundColor: '#E0E0E0', borderRadius: 75, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 16, color: COLORS.black }}>Add Profile Picture</Text>
+                    </View>
+                )}
+                </View>
+            )}
+            </TouchableOpacity>
+
+            <View style={{ marginBottom: 12, marginTop: 5 }}>
               <Picker
                 selectedValue={userType}
                 onValueChange={(itemValue) => setUserType(itemValue)}
@@ -255,3 +295,4 @@ const styles = StyleSheet.create({
     alignSelf: 'center'
   },
 });
+

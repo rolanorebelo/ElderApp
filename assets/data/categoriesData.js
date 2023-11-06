@@ -28,13 +28,7 @@ const categoriesData = [
     image: require('../images/cook.png'),
     title: 'Cooking',
     selected: false,
-  },
-  {
-    id: '6',
-    image: require('../images/More.png'),
-    title: 'More',
-    selected: false,
-  },
+  }
 ];
 
 export default categoriesData;
