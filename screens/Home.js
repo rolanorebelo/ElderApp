@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -45,6 +45,30 @@ export default Home = ({ navigation }) => {
     },
     // Add more event data as needed
   ];
+  const fetchUserProfile = () => {
+    // Check if the user is authenticated
+    const user = auth.currentUser;
+    if (user) {
+      setUserName(user.displayName);
+  
+      // Query Firestore to get the user's profile picture URL
+      const userRef = doc(getFirestore(), 'users', user.uid);
+  
+      getDoc(userRef)
+        .then((doc) => {
+          if (doc.exists()) {
+            const userData = doc.data();
+            if (userData.profilePicture) {
+              setUserProfilePicture(userData.profilePicture);
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching user data: ', error);
+        });
+    }
+  };
+  
   const renderEventTile = (event) => {
     return (
       <View key={event.id} style={styles.popularCardWrapper}>
@@ -83,6 +107,7 @@ export default Home = ({ navigation }) => {
     });
   };
   useEffect(() => {
+    fetchUserProfile();
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUserName(user.displayName);
@@ -109,6 +134,14 @@ export default Home = ({ navigation }) => {
 
     return () => unsubscribe();
   }, []);
+
+  useLayoutEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchUserProfile();
+    });
+  
+    return unsubscribe;
+  }, [navigation]);
   
   const getGreeting = () => {
     const currentTime = new Date();
