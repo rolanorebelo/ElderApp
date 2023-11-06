@@ -8,32 +8,22 @@ import * as ImagePicker from 'expo-image-picker';
 import AuthenticatedUserContext from '../AuthenticatedUserContext';
 import colors from '../constants/colors';
 import { firestore, storage } from '../config/firebase';
-import { doc, setDoc , updateDoc} from 'firebase/firestore';
+import { doc, updateDoc} from 'firebase/firestore';
+import { updateProfile } from 'firebase/auth';
+import Toast from 'react-native-toast-message';
 
 const Profile = () => {
   const { setUser } = useContext(AuthenticatedUserContext);
   const navigation = useNavigation();
   const route = useRoute();
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [interests, setInterests] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
 
-  useEffect(() => {
-    setProfilePicture(route.params.profilePicture);
-    
-    return () => {
-      // This code runs when the component is unmounted
-      if (profilePicture !== route.params.profilePicture) {
-        // If the profile picture has changed, navigate back to Home with the updated picture
-        navigation.navigate('Home', {
-          profilePicture: profilePicture, // Pass the updated profile picture
-        });
-      }
-    };
-  }, [route.params.profilePicture, profilePicture]);
+  // useEffect(() => {
+  //   setProfilePicture(route.params.profilePicture);
+  // }, [route.params.profilePicture]);
   
   // const requestPermission = async () => {
   //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -67,8 +57,21 @@ const Profile = () => {
           profilePicture: selectedImage, // Update the profile image URI
         });
         console.log('Profile image updated successfully.');
+        Toast.show({
+          type: 'success',
+          position: 'bottom',
+          text1: 'Profile Picture Updated',
+          visibilityTime: 3000, // Adjust as needed
+        });
       } catch (error) {
         console.error('Error updating profile image:', error);
+       alert('Error updating profile image:', error);
+        Toast.show({
+          type: 'error',
+          position: 'bottom',
+          text1: 'Error updating profile image',
+          visibilityTime: 3000, // Adjust as needed
+        });
       }
     }
   };
@@ -81,16 +84,32 @@ const Profile = () => {
         const userDocRef = doc(database, 'users', user.uid);
 
         await updateDoc(userDocRef, {
-          username,
-          email,
-          phoneNumber,
-          interests,
+          firstName,
+          lastName,
+          mobileNumber,
           profilePicture,
         });
 
+        await updateProfile(user, {
+          displayName: `${firstName} ${lastName}`,
+        });
+
         console.log('Profile information updated successfully.');
+        //alert('Profile information updated successfully.');
+        Toast.show({
+          type: 'success',
+          position: 'bottom',
+          text1: 'Profile information updated successfully.',
+          visibilityTime: 3000, // Adjust as needed
+        });
       }
     } catch (error) {
+         Toast.show({
+          type: 'error',
+          position: 'bottom',
+          text1: 'Error updating profile image',
+          visibilityTime: 3000, // Adjust as needed
+        });
       console.error('Error updating profile:', error);
     }
   };
@@ -98,20 +117,14 @@ const Profile = () => {
   
   const handleChange = (name, value) => {
     switch (name) {
-      case 'username':
-        setUsername(value);
+      case 'firstName':
+        setFirstName(value);
         break;
-      case 'email':
-        setEmail(value);
+      case 'lastName':
+        setLastName(value);
         break;
-      case 'phoneNumber':
-        setPhoneNumber(value);
-        break;
-      case 'password':
-        setPassword(value);
-        break;
-      case 'interests':
-        setInterests(value);
+      case 'mobileNumber':
+        setMobileNumber(value);
         break;
       default:
         break;
@@ -143,38 +156,24 @@ const Profile = () => {
       </TouchableOpacity>
 
       <TextInput
-        name="username"
-        placeholder="Username"
-        value={username}
-        onChangeText={(value) => handleChange('username', value)}
+        name="firstName"
+        placeholder="First Name"
+        value={firstName}
+        onChangeText={(value) => handleChange('firstName', value)}
         style={styles.input}
       />
       <TextInput
-        name="email"
-        placeholder="Email Id"
-        value={email}
-        onChangeText={(value) => handleChange('email', value)}
+        name="lastName"
+        placeholder="Last Name"
+        value={lastName}
+        onChangeText={(value) => handleChange('lastName', value)}
         style={styles.input}
       />
       <TextInput
-        name="phoneNumber"
-        placeholder="Phone Number"
-        value={phoneNumber}
-        onChangeText={(value) => handleChange('phoneNumber', value)}
-        style={styles.input}
-      />
-      <TextInput
-        name="password"
-        placeholder="Password"
-        value={password}
-        onChangeText={(value) => handleChange('password', value)}
-        style={styles.input}
-      />
-      <TextInput
-        name="interests"
-        placeholder="Interests"
-        value={interests}
-        onChangeText={(value) => handleChange('interests', value)}
+        name="mobileNumber"
+        placeholder="Mobile Number"
+        value={mobileNumber}
+        onChangeText={(value) => handleChange('mobileNumber', value)}
         style={styles.input}
       />
        <View style={styles.updateButtonContainer}>

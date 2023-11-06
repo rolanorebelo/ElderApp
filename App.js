@@ -12,6 +12,7 @@ import Profile from './screens/Profile';
 import TaskDetails from './screens/TaskDetails';
 import VolunteerHome from './screens/Volunteer/VolunteerHome';
 import { LoadingScreen, MatchedVolunteers, Welcome } from './screens';
+import Toast from 'react-native-toast-message';
 import * as Font from 'expo-font';
 import { useFonts } from 'expo-font';
 import AuthenticatedUserContext from './AuthenticatedUserContext';
@@ -169,6 +170,7 @@ export default function App() {
   return (
     <AuthenticatedUserProvider>
       <RootNavigator />
+      <Toast ref={(ref) => Toast.setRef(ref)} /> 
     </AuthenticatedUserProvider>
   );
 }
