@@ -27,7 +27,7 @@ MaterialCommunityIcons.loadFont();
 export default Home = ({ navigation }) => {
   const [searchInput, setSearchInput] = useState('');
   const [userName, setUserName] = useState(null);
-  const [profilePicture, setUserProfilePicture] = useState();
+  const [profilePicture, setUserProfilePicture] = useState(require('../assets/default.png'));
   const eventData = [
     {
       id: 1,
@@ -108,7 +108,7 @@ export default Home = ({ navigation }) => {
     });
 
     return () => unsubscribe();
-  }, [profilePicture]);
+  }, []);
   
   const getGreeting = () => {
     const currentTime = new Date();
@@ -186,13 +186,15 @@ export default Home = ({ navigation }) => {
             <Feather name="bell" size={24} color={colors.textDark} />
             <TouchableOpacity onPress={handleProfileImageClick}>
             <Image
-        source={
-          profilePicture
-            ? { uri: profilePicture }
-            : require('../assets/default.png') // Use a default image if no profile picture is available
-        }
-        style={styles.profileImage}
-      />
+              source={
+                typeof profilePicture === 'string'
+                  ? { uri: profilePicture }
+                  : typeof profilePicture === 'number'
+                  ? profilePicture
+                  : require('../assets/default.png')
+              }
+              style={styles.profileImage}
+            />
              </TouchableOpacity>
           </View>
         </SafeAreaView>
