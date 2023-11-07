@@ -238,10 +238,10 @@ const styles = StyleSheet.create({
   headerWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingTop: 24,
     alignItems: 'center',
-    marginTop: 28,
+    marginTop: 30,
   },
   profileImage: {
     width: 40,
