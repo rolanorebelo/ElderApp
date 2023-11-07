@@ -111,9 +111,8 @@ const TaskDetails = ({ route, navigation }) => {
     case 'Groceries':
       // Fields for Groceries
       renderFields = (
-        <>
+        <> 
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Items List</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Enter items list here"
@@ -122,7 +121,6 @@ const TaskDetails = ({ route, navigation }) => {
             />
           </View>
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Additional Requests</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Enter additional repair requests here"
@@ -138,7 +136,6 @@ const TaskDetails = ({ route, navigation }) => {
       renderFields = (
         <>
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Repair Description</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Enter repair description here"
@@ -147,7 +144,6 @@ const TaskDetails = ({ route, navigation }) => {
             />
           </View>
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Additional Requests</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Enter additional repair requests here"
@@ -183,12 +179,34 @@ const TaskDetails = ({ route, navigation }) => {
         </>
       );
       break;
+      case 'Cleaning':
+        // Fields for Cooking
+        renderFields = (
+          <>
+            <View style={styles.inputSection}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter cleaning description"
+                value={serviceDesc}
+                onChangeText={(text) => setServiceDescription(text)}
+              />
+            </View>
+            <View style={styles.inputSection}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter additional requests here"
+                value={additionalRequests}
+                onChangeText={(text) => setAdditionalRequests(text)}
+              />
+            </View>
+          </>
+        );
+        break;
     case 'Cooking':
       // Fields for Cooking
       renderFields = (
         <>
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Dish Name</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Enter dish name here"
@@ -197,7 +215,6 @@ const TaskDetails = ({ route, navigation }) => {
             />
           </View>
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Additional Requests</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Enter additional repair requests here"
@@ -218,6 +235,7 @@ const TaskDetails = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+       <Text style={styles.title}>{serviceType}</Text>
       {renderFields}
       <TouchableOpacity onPress={postTask}>
         <View style={styles.orderWrapper}>
@@ -234,6 +252,14 @@ export default TaskDetails;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.black,
+    textAlign: 'center',
+    marginBottom:10,
+    paddingVertical: 20
   },
   headerWrapper: {
     flexDirection: 'row',
@@ -284,13 +310,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 30,
   },
-  title: {
-    fontFamily: 'Montserrat-Bold',
-    fontSize: 32,
-    color: colors.textDark,
-    width: '50%',
-    height: 20,
-  },
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -310,7 +329,7 @@ const styles = StyleSheet.create({
   },
   inputSection: {
     paddingHorizontal: 20,
-    marginTop: 20,
+    marginTop: 2,
   },
   textInput: {
     borderWidth: 1,

@@ -8,7 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import AuthenticatedUserContext from '../AuthenticatedUserContext';
 import colors from '../constants/colors';
 import { firestore, storage } from '../config/firebase';
-import { doc, updateDoc} from 'firebase/firestore';
+import { doc, getDoc, updateDoc} from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
 
@@ -21,9 +21,34 @@ const Profile = () => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
 
+  const profilePic = route.params.profilePicture;
+  
   useEffect(() => {
+    const { user } = auth.currentUser;
+    setFirstName(route.params.firstName);
+    setLastName(route.params.lastName);
+    if (user) {
+  
+      // Fetch the mobileNumber from Firestore based on the user's UID
+      const userDocRef = doc(database, 'users', user.uid);
+      getDoc(userDocRef)
+        .then((docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            const userMobileNumber = userData.mobileNumber;
+            if (userMobileNumber) {
+              setMobileNumber(userMobileNumber);
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching mobileNumber:', error);
+        });
+    }
+  
+    // Update the profile picture with the one from the route params
     setProfilePicture(route.params.profilePicture);
-  }, [route.params.profilePicture]);
+  }, [route.params.profilePicture, route.params.firstName, route.params.lastName]);
 
   const handleChangePicture = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -65,43 +90,75 @@ const Profile = () => {
     }
   };
   
-  
   const handleSubmit = async () => {
     try {
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(database, 'users', user.uid);
-
-        await updateDoc(userDocRef, {
-          firstName,
-          lastName,
-          mobileNumber,
-          profilePicture,
-        });
-
-        await updateProfile(user, {
-          displayName: `${firstName} ${lastName}`,
-        });
-
-        console.log('Profile information updated successfully.');
-        //alert('Profile information updated successfully.');
-        Toast.show({
-          type: 'success',
-          position: 'bottom',
-          text1: 'Profile information updated successfully.',
-          visibilityTime: 3000, // Adjust as needed
-        });
+        if (firstName.trim() === '' || lastName.trim() === '') {
+          // Check if first name or last name is empty and show an error message
+          Toast.show({
+            type: 'error',
+            position: 'bottom',
+            text1: 'First Name and Last Name cannot be empty.',
+            visibilityTime: 3000, // Adjust as needed
+          });
+        } else {
+          const userDocRef = doc(database, 'users', user.uid);
+    
+          // Prepare the data to update
+          const updatedData = {};
+    
+          // Check if firstName is not empty and update it
+          if (firstName.trim() !== '') {
+            updatedData.firstName = firstName;
+          }
+    
+          // Check if lastName is not empty and update it
+          if (lastName.trim() !== '') {
+            updatedData.lastName = lastName;
+          }
+    
+          // Check if mobileNumber is not empty and update it
+          if (mobileNumber.trim() !== '') {
+            updatedData.mobileNumber = mobileNumber;
+          }
+    
+          // Check if profilePicture is not empty and update it
+          if (profilePicture) {
+            updatedData.profilePicture = profilePicture;
+          }
+    
+          // Update the user's document in Firestore
+          await updateDoc(userDocRef, updatedData);
+    
+          // Update the user's display name in Firebase Authentication
+          const updatedDisplayName = `${firstName.trim()} ${lastName.trim()}`;
+          if (updatedDisplayName !== '') {
+            await updateProfile(user, {
+              displayName: updatedDisplayName,
+            });
+          }
+    
+          console.log('Profile information updated successfully.');
+          Toast.show({
+            type: 'success',
+            position: 'bottom',
+            text1: 'Profile information updated successfully.',
+            visibilityTime: 3000, // Adjust as needed
+          });
+        }
       }
     } catch (error) {
-         Toast.show({
-          type: 'error',
-          position: 'bottom',
-          text1: 'Error updating profile image',
-          visibilityTime: 3000, // Adjust as needed
-        });
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error updating profile image',
+        visibilityTime: 3000, // Adjust as needed
+      });
       console.error('Error updating profile:', error);
     }
   };
+  
   
   
   const handleChange = (name, value) => {
@@ -140,8 +197,8 @@ const Profile = () => {
         }
         style={styles.profileImage}
       />
-      <TouchableOpacity onPress={handleChangePicture}>
-        <Text>Change Picture</Text>
+      <TouchableOpacity style={styles.changePictureButton} onPress={handleChangePicture}>
+        <Text style={styles.changePictureButtonText}>Change Picture</Text>
       </TouchableOpacity>
 
       <TextInput
@@ -186,6 +243,19 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 10
+  },
+  changePictureButton: {
+    backgroundColor: 'darkblue', // Set the background color to a darker shade of blue
+    padding: 10, // Increase the padding to make it bigger
+    borderRadius: 8,
+    marginTop: 10, // Add some top margin for spacing
+    marginBottom: 10
+  },
+  changePictureButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 10
   },
   input: {
     height: 40,
