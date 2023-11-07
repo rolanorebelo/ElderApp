@@ -51,7 +51,7 @@ function ChatStack() {
       <Stack.Screen
         name='TaskDetails'
         component={TaskDetails}
-        options={{ title: 'Task Details' }} // Hide the header for TaskDetails screen
+        options={{ title: 'Post a Task' }} // Hide the header for TaskDetails screen
       />
       <Stack.Screen
         name="LoadingScreen"

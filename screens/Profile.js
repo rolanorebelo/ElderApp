@@ -21,20 +21,9 @@ const Profile = () => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
 
-  // useEffect(() => {
-  //   setProfilePicture(route.params.profilePicture);
-  // }, [route.params.profilePicture]);
-  
-  // const requestPermission = async () => {
-  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //   if (status !== 'granted') {
-  //     alert('Sorry, we need camera roll permissions to make this work!');
-  //   }
-  // };
-  
-  // useEffect(() => {
-  //   requestPermission();
-  // }, []);
+  useEffect(() => {
+    setProfilePicture(route.params.profilePicture);
+  }, [route.params.profilePicture]);
 
   const handleChangePicture = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
