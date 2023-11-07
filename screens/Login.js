@@ -11,9 +11,19 @@ import { collection, database } from '../config/firebase'; // Update with your F
 export default function Login({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const validateInput = () => {
+    if (!email || !password) {
+      setError("Please fill in both email and password fields.");
+      return false;
+    }
+    setError(""); // Clear any previous error message
+    return true;
+  };
 
   const onHandleLogin = async () => {
-    if (email !== "" && password !== "") {
+    if (validateInput()) {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -22,7 +32,7 @@ export default function Login({ navigation }) {
         const idTokenResult = await user.getIdTokenResult();
         const customClaims = idTokenResult.claims;
         const role = customClaims.role; // Assuming 'role' is the custom claim set by the Cloud Function
-  console.log('claims',customClaims);
+        console.log('claims',customClaims);
 
         // Check the user's role and navigate accordingly
         if (role === 'volunteer') {
@@ -31,8 +41,7 @@ export default function Login({ navigation }) {
           navigation.navigate('Home');
         }
       } catch (error) {
-        console.error('Login error:', error);
-        Alert.alert("Login error", error.message);
+        setError("Invalid Username/Password"); // Clear any previous error message
       }
     }
   };
@@ -100,6 +109,7 @@ export default function Login({ navigation }) {
         value={password}
         onChangeText={(text) => setPassword(text)}
       />
+       {error !== "" && <Text style={styles.errorText}>{error}</Text>}
       <TouchableOpacity style={styles.button} onPress={onHandleLogin}>
         <Text style={{fontWeight: 'bold', color: 'white', fontSize: 18}}> Log In</Text>
       </TouchableOpacity>
@@ -132,6 +142,11 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingBottom: 24,
   },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    marginBottom: 10,
+  },
   input: {
     backgroundColor: "#F6F7FB",
     height: 58,
@@ -140,26 +155,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
   },
-  backImage: {
-    width: "100%",
-    height: 340,
-    position: "absolute",
-    top: 0,
-    resizeMode: 'cover',
-  },
-  whiteSheet: {
-    width: '100%',
-    height: '75%',
-    position: "absolute",
-    bottom: 0,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 60,
-  },
-  form: {
-    flex: 1,
-    justifyContent: 'center',
-    marginHorizontal: 30,
-  },
+
   button: {
     backgroundColor: '#2D264B',
     height: 58,
