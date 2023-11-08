@@ -20,7 +20,8 @@ import colors from '../assets/colors/colors';
 import { LinearGradient } from "expo-linear-gradient";
 import Header from './Header';
 import { auth, database, firestore} from '../config/firebase';
-import { getFirestore, collection, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, addDoc, getDoc } from 'firebase/firestore';
+import Toast from 'react-native-toast-message';
 Feather.loadFont();
 MaterialCommunityIcons.loadFont();
 
@@ -35,6 +36,7 @@ export default Home = ({ navigation }) => {
       date: 'Nov 15, 2023',
       name: 'Community Cleanup',
       description: 'Join us for a community cleanup event to make our neighborhood cleaner and greener.',
+      attendingCount: 100
     },
     {
       id: 2,
@@ -42,45 +44,30 @@ export default Home = ({ navigation }) => {
       date: 'Nov 20, 2023',
       name: 'Food Drive',
       description: 'Help us collect food for those in need. Let\'s make a difference together.',
+      attendingCount: 194
     },
     // Add more event data as needed
   ];
   const fetchUserProfile = () => {
-    // Check if the user is authenticated
     const user = auth.currentUser;
     if (user) {
       setUserName(user.displayName);
-  
-      // Query Firestore to get the user's profile picture URL
-      const userRef = doc(getFirestore(), 'users', user.uid);
-  
-      getDoc(userRef)
-        .then((doc) => {
-          if (doc.exists()) {
-            const userData = doc.data();
-            if (userData.profilePicture) {
-              setUserProfilePicture(userData.profilePicture);
-            }
-          }
-        })
-        .catch((error) => {
-          console.error('Error fetching user data: ', error);
-        });
+      getUserProfilePicture(user.uid);
     }
   };
   
   const renderEventTile = (event) => {
     return (
-      <View key={event.id} style={styles.popularCardWrapper}>
-        <View style={styles.popularContent}>
-          <View style={styles.popularTopWrapper}>
-            <Text style={styles.popularTopText}>{event.date}</Text>
+      <View key={event.id} style={styles.eventCardWrapper}>
+        <View style={styles.eventContent}>
+          <View style={styles.eventTopWrapper}>
+            <Text style={styles.eventTopText}>{event.date}</Text>
           </View>
-          <View style={styles.popularTitlesWrapper}>
-            <Text style={styles.popularTitlesTitle}>{event.name}</Text>
-            <Text style={styles.popularTitlesWeight}>{event.description}</Text>
+          <View style={styles.eventTitlesWrapper}>
+            <Text style={styles.eventTitle}>{event.name}</Text>
+            <Text style={styles.eventTitlesWeight}>{event.description}</Text>
           </View>
-          <View style={styles.popularCardBottom}>
+          <View style={styles.eventCardBottom}>
             <View style={styles.actionButtonsWrapper}>
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: colors.primary }]}
@@ -106,27 +93,30 @@ export default Home = ({ navigation }) => {
       serviceType: item.title, // Pass the selected service type
     });
   };
+
+  const getUserProfilePicture = (uid) => {
+    const userRef = doc(getFirestore(), 'users', uid);
+
+    getDoc(userRef)
+      .then((doc) => {
+        if (doc.exists()) {
+          const userData = doc.data();
+          if (userData.profilePicture) {
+            setUserProfilePicture(userData.profilePicture);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching user data: ', error);
+      });
+  };
   useEffect(() => {
     fetchUserProfile();
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUserName(user.displayName);
-      
-        // Query Firestore to get the user's profile picture URL
-        const userRef = doc(getFirestore(), 'users', user.uid); // Use doc to reference a document
-      
-        getDoc(userRef) // Use getDoc to get the document data
-          .then((doc) => {
-            if (doc.exists()) {
-              const userData = doc.data();
-              if (userData.profilePicture) {
-                setUserProfilePicture(userData.profilePicture);
-              }
-            }
-          })
-          .catch((error) => {
-            console.error('Error fetching user data: ', error);
-          });
+        getUserProfilePicture(user.uid);
       } else {
         setUserName(null);
       }
@@ -157,23 +147,59 @@ export default Home = ({ navigation }) => {
   };
 
   //const userName = auth.currentUser.displayName;
-  const handleJoinEvent = (item) => {
-    // Implement your join event logic here
+  const handleJoinEvent = (event) => {
+    // Ensure that the user is authenticated (you can add more validation)
+    const user = auth.currentUser;
+    if (!user) {
+      // Handle the case when the user is not authenticated, show a login prompt, etc.
+      return;
+    }
+
+    // Define the event data to store in Firestore
+    const eventData = {
+      eventId: event.id,       // Event ID
+      userId: user.uid,       // User ID
+      joinDateTime: new Date().toISOString(),  // Current date and time in ISO format
+    };
+
+    // Reference to the Firestore collection "event_joins" (you can change the collection name)
+    const eventJoinsRef = collection(getFirestore(), "event_joins");
+
+    // Add a new document to the "event_joins" collection
+    addDoc(eventJoinsRef, eventData)
+      .then(() => {
+        console.log("User joined the event successfully!");
+        Toast.show({
+          type: 'success',
+          position: 'bottom',
+          text1: 'User joined the event successfully!',
+          visibilityTime: 3000, // Adjust as needed
+        });
+      })
+      .catch((error) => {
+        console.error("Error joining the event: ", error);
+      });
   };
 
-  const handleViewEvent = (item) => {
-    // Implement your view event logic here
+  const handleViewEvent = (event) => {
+    navigation.navigate('EventDetails', { event });
   };
 
   const handleProfileImageClick = () => {
+    const displayName = auth.currentUser.displayName;
+    console.log('display',displayName);
+    console.log('user',userName);
+    const displayNameParts = userName.split(' ');
+    const firstName = displayNameParts[0];
+    const lastName = displayNameParts[1];
+  
     navigation.navigate('Profile', {
       profilePicture: profilePicture,
+      firstName: firstName,
+      lastName: lastName,
     });
   };
-
-  const handleChatPress = () => {
-    navigation.navigate('Chat');
-  }
+  
 
   const renderCategoryItem = ({ item }) => {
     return (
@@ -286,23 +312,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  chatButton: {
-    backgroundColor: colors.primary,
-    height: 50,
-    width: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: {
-        width: 0,
-        height: 2,
-    },
-    shadowOpacity: .9,
-    shadowRadius: 8,
-    marginRight: 20,
-    marginBottom: 50,
-},
+
   headerWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -339,24 +349,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 25,
     letterSpacing: 0.25,
-  },
-  searchWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 30,
-  },
-  search: {
-    flex: 1,
-    marginLeft: 10,
-    borderBottomColor: colors.textLight,
-    borderBottomWidth: 2,
-  },
-  searchText: {
-    fontFamily: 'Montserrat-Semibold',
-    fontSize: 14,
-    marginBottom: 5,
-    color: colors.textLight,
   },
   categoriesWrapper: {
     marginTop: 30,
@@ -440,7 +432,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Bold',
     fontSize: 29,
   },
-  popularCardWrapper: {
+  eventCardWrapper: {
     marginBottom: 10,
     backgroundColor: colors.white,
     borderRadius: 25,
@@ -460,23 +452,23 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  popularContent: {
+  eventContent: {
     flex: 1 // Take up the available space vertically
   },
   
-  popularTopWrapper: {
+  eventTopWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  popularTopText: {
+  eventTopText: {
     marginRight: 70,
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 20,
   },
-  popularTitlesWrapper: {
+  eventTitlesWrapper: {
     marginTop: 20,
   },
-  popularTitlesTitle: {
+  eventTitle: {
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 12,
     marginRight: -60,
@@ -484,36 +476,19 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     maxWidth: 200,
   },
-  popularTitlesWeight: {
+  eventTitlesWeight: {
     fontFamily: 'Montserrat-Medium',
     fontSize: 12,
     color: colors.textLight,
     marginTop: 5,
   },
-  popularCardBottom: {
+  eventCardBottom: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
     marginLeft: -20,
   },
-  addPizzaButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 40,
-    paddingVertical: 20,
-    borderTopRightRadius: 25,
-    borderBottomLeftRadius: 25,
-  },
-  ratingWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 20,
-  },
-  rating: {
-    fontFamily: 'Montserrat-SemiBold',
-    fontSize: 12,
-    color: colors.textDark,
-    marginLeft: 5,
-  },
+  
   actionButtonContainer: {
     overflow: 'visible',
   },
