@@ -8,6 +8,7 @@ import Chat from "./Chat";
 import VolunteerHome from "./Volunteer/VolunteerHome";
 import LoadingScreen from "./LoadingScreen";
 import MatchedVolunteers from "./MatchedVolunteers";
+import EventDetails from "./EventDetails";
 export {
     Login,
     Welcome,
@@ -18,5 +19,6 @@ export {
     Chat,
     VolunteerHome,
     LoadingScreen,
-    MatchedVolunteers
+    MatchedVolunteers,
+    EventDetails
 }
