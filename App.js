@@ -11,11 +11,14 @@ import Home from './screens/Home';
 import Profile from './screens/Profile';
 import TaskDetails from './screens/TaskDetails';
 import VolunteerHome from './screens/Volunteer/VolunteerHome';
-import { LoadingScreen, MatchedVolunteers, Welcome } from './screens';
+import { LoadingScreen, MatchedVolunteers, Welcome, EventDetails } from './screens';
 import Toast from 'react-native-toast-message';
 import * as Font from 'expo-font';
 import { useFonts } from 'expo-font';
 import AuthenticatedUserContext from './AuthenticatedUserContext';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreAllLogs();
 // import firebaseAuth from './firebaseConfig';
 const Stack = createNativeStackNavigator();
 // const AuthenticatedUserContext = createContext({});
@@ -38,6 +41,20 @@ function ChatStack() {
         component={Home}
         options={{ headerShown: false }} // Hide the header for Home screen
       />
+       <Stack.Screen
+        name='EventDetails'
+        component={EventDetails}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black', // Change the background color of the header
+          },
+          headerTitleStyle: {
+            color: 'white', // Change the text color of the header title
+          },
+          headerTitle: 'Event Details', // Set a custom title for the header
+          headerTitleAlign: 'center', // Center-align the title
+        }} 
+      />
       <Stack.Screen
         name='Chat'
         component={Chat}
@@ -46,12 +63,22 @@ function ChatStack() {
       <Stack.Screen
         name='Profile'
         component={Profile}
-        options={{ headerShown: false }} // Hide the header for Profile screen
+        options={{
+          headerStyle: {
+            backgroundColor: 'blue', // Change the background color of the header
+          },
+          headerTitleStyle: {
+            color: 'white', // Change the text color of the header title
+          },
+          headerTitle: 'Profile', // Set a custom title for the header
+          headerTitleAlign: 'center', // Center-align the title
+        }} 
       />
       <Stack.Screen
         name='TaskDetails'
         component={TaskDetails}
-        options={{ title: 'Post a Task' }} // Hide the header for TaskDetails screen
+        options={{ headerTitle: 'Post a Task',
+        headerTitleAlign: 'center',  }} 
       />
       <Stack.Screen
         name="LoadingScreen"
