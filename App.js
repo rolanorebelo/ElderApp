@@ -1,9 +1,10 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'; // Import createBottomTabNavigator
 import { View, ActivityIndicator } from 'react-native';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './config/firebase';
+import { auth, database } from './config/firebase';
 import Login from './screens/Login';
 import SignUp from './screens/SignUp';
 import Chat from './screens/Chat';
@@ -11,23 +12,52 @@ import Home from './screens/Home';
 import Profile from './screens/Profile';
 import TaskDetails from './screens/TaskDetails';
 import VolunteerHome from './screens/Volunteer/VolunteerHome';
-import { LoadingScreen, MatchedVolunteers, Welcome, EventDetails } from './screens';
+import { LoadingScreen, MatchedVolunteers, Welcome, EventDetails, Header, ViewTask, VolunteerChat, TaskTabs, CurrentTasks, NeighbourList, InvoicePage, InvoicePreview } from './screens';
 import Toast from 'react-native-toast-message';
+import VolunteerProfile from './screens/Volunteer/VolunteerProfile';
 import * as Font from 'expo-font';
 import { useFonts } from 'expo-font';
 import AuthenticatedUserContext from './AuthenticatedUserContext';
 import { LogBox } from 'react-native';
+import { doc, getDoc } from 'firebase/firestore';
 
 LogBox.ignoreAllLogs();
-// import firebaseAuth from './firebaseConfig';
 const Stack = createNativeStackNavigator();
-// const AuthenticatedUserContext = createContext({});
 
 const AuthenticatedUserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  console.log('AuthenticatedUserProvider rendered');
+  const [userType, setUserType] = useState(null);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(
+      auth,
+      async (authenticatedUser) => {
+        if (authenticatedUser) {
+          setUser(authenticatedUser);
+          const userDocRef = doc(database, 'users', authenticatedUser.uid);
+          const userDocSnapshot = await getDoc(userDocRef);
+          if (userDocSnapshot.exists()) {
+            const userData = userDocSnapshot.data();
+            setUserType(userData.userType);
+          } else {
+            const volunteerDocRef = doc(database, 'volunteer', authenticatedUser.uid);
+            const volunteerDocSnapshot = await getDoc(volunteerDocRef);
+            if (volunteerDocSnapshot.exists()) {
+              setUserType('volunteer');
+            }
+          }
+        } else {
+          setUser(null);
+          setUserType(null);
+        }
+      }
+    );
+
+    return unsubscribeAuth;
+  }, []);
+
   return (
-    <AuthenticatedUserContext.Provider value={{ user, setUser }}>
+    <AuthenticatedUserContext.Provider value={{ user, userType, setUser }}>
       {children}
     </AuthenticatedUserContext.Provider>
   );
@@ -39,80 +69,181 @@ function ChatStack() {
       <Stack.Screen
         name='Home'
         component={Home}
-        options={{ headerShown: false }} // Hide the header for Home screen
+        options={{ headerShown: false }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name='EventDetails'
         component={EventDetails}
         options={{
           headerStyle: {
-            backgroundColor: 'black', // Change the background color of the header
+            backgroundColor: 'black',
           },
           headerTitleStyle: {
-            color: 'white', // Change the text color of the header title
+            color: 'white',
           },
-          headerTitle: 'Event Details', // Set a custom title for the header
-          headerTitleAlign: 'center', // Center-align the title
-        }} 
+          headerTitle: 'Event Details',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
+        name='NeighbourList'
+        component={NeighbourList}
+        options={{ title: 'Neighbour List' }}
       />
       <Stack.Screen
         name='Chat'
         component={Chat}
-        options={{ title: 'Chat' }} // Show the header for Chat screen
+        options={{ title: 'Chat' }}
+      />
+      <Stack.Screen
+        name='TaskTabs'
+        component={TaskTabs}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Tasks',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
+        name='CurrentTasks'
+        component={CurrentTasks}
+        options={{
+          headerStyle: {
+            backgroundColor: 'blue',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Current Tasks',
+          headerTitleAlign: 'center',
+        }}
       />
       <Stack.Screen
         name='Profile'
         component={Profile}
         options={{
           headerStyle: {
-            backgroundColor: 'blue', // Change the background color of the header
+            backgroundColor: 'blue',
           },
           headerTitleStyle: {
-            color: 'white', // Change the text color of the header title
+            color: 'white',
           },
-          headerTitle: 'Profile', // Set a custom title for the header
-          headerTitleAlign: 'center', // Center-align the title
-        }} 
+          headerTitle: 'Profile',
+          headerTitleAlign: 'center',
+        }}
       />
       <Stack.Screen
         name='TaskDetails'
         component={TaskDetails}
-        options={{ headerTitle: 'Post a Task',
-        headerTitleAlign: 'center',  }} 
+        options={{ headerTitle: 'Post a Task', headerTitleAlign: 'center' }}
       />
       <Stack.Screen
         name="LoadingScreen"
         component={LoadingScreen}
-        options={{ headerShown: false }} // Hide the header for LoadingScreen
+        options={{ headerShown: false }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="MatchedVolunteers"
         component={MatchedVolunteers}
-        options={{ title: 'Select a Volunteer' }}  // Hide the header for LoadingScreen
+        options={{ title: 'Select a Volunteer' }}
       />
-      <Stack.Screen name='Login' component={Login}  options={{ headerShown: false }} />
+      <Stack.Screen name='Login' component={Login} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
 
-function VolunteerStack(){
-  return(
-    <Stack.Navigator  defaultScreenOptions={VolunteerHome}>
-      <Stack.Screen options={{
-    title: 'Task Requests', // Change the header name to whatever you want
-  }} name='VolunteerHome' component={VolunteerHome}/>
-  <Stack.Screen name='Login' component={Login} />
+function VolunteerStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name='VolunteerHome'
+        component={VolunteerHome}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Task Requests',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
+        name="Header"
+        component={Header}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name='VolunteerProfile'
+        component={VolunteerProfile}
+        options={{
+          headerStyle: {
+            backgroundColor: 'blue',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Volunteer Profile',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
+        name='ViewTask'
+        component={ViewTask}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Task Details',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
+        name='InvoicePage'
+        component={InvoicePage}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Invoice Page',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
+        name='InvoicePreview'
+        component={InvoicePreview}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Invoice Preview',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Stack.Screen
+        name='VolunteerChat'
+        component={VolunteerChat}
+        options={{ title: 'Chat', headerTitleAlign: 'center' }}
+      />
+      
     </Stack.Navigator>
   );
 }
-
-// function WelcomeStack() {
-//   return (
-//     <Stack.Navigator screenOptions={{ headerShown: false }}>
-//       <Stack.Screen name='Welcome' component={Welcome} />
-//     </Stack.Navigator>
-//   );
-// }
 
 function AuthStack() {
   return (
@@ -125,23 +256,24 @@ function AuthStack() {
 }
 
 function RootNavigator() {
-  const { user, setUser } = useContext(AuthenticatedUserContext);
+  const { user, userType, setUser } = useContext(AuthenticatedUserContext);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // onAuthStateChanged returns an unsubscriber
     const unsubscribeAuth = onAuthStateChanged(
       auth,
-      async authenticatedUser => {
+      async (authenticatedUser) => {
         authenticatedUser ? setUser(authenticatedUser) : setUser(null);
         setIsLoading(false);
       }
     );
 
-    // Unsubscribe auth listener on unmount
     return unsubscribeAuth;
   }, [user]);
 
+  if (isLoading === null) {
+    return null;
+  }
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -151,18 +283,15 @@ function RootNavigator() {
   }
 
   if (user) {
-    // Check the user's userType (assuming it's a property of the user object)
-    const userType = user.userType; // Adjust this based on your data structure
-    console.log('Userrr',user);
+    console.log('Useerrrr',user);
+    console.log('Useerr Typee',userType);
     if (userType === 'volunteer') {
-      console.log('VOluneer');
       return (
         <NavigationContainer>
           <VolunteerStack />
         </NavigationContainer>
       );
     } else {
-      console.log('Chattt');
       return (
         <NavigationContainer>
           <ChatStack />
@@ -178,26 +307,11 @@ function RootNavigator() {
   }
 }
 
-
 export default function App() {
-  // let [fontsLoaded] = useFonts({
-  //   // Define your fonts here
-  //   // Example:
-  //   // 'YourFontName': require('./path-to-your-font.ttf'),
-  // });
-
-  // if (!fontsLoaded) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-  //       <ActivityIndicator size='large' />
-  //     </View>
-  //   );
-  // }
-
   return (
     <AuthenticatedUserProvider>
       <RootNavigator />
-      <Toast ref={(ref) => Toast.setRef(ref)} /> 
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </AuthenticatedUserProvider>
   );
 }
