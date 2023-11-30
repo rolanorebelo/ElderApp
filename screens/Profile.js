@@ -20,8 +20,6 @@ const Profile = () => {
   const [lastName, setLastName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
-
-  const profilePic = route.params.profilePicture;
   
   useEffect(() => {
     const { user } = auth.currentUser;
@@ -70,7 +68,7 @@ const Profile = () => {
         await updateDoc(userDocRef, {
           profilePicture: selectedImage, // Update the profile image URI
         });
-        console.log('Profile image updated successfully.');
+        //console.log('Profile image updated successfully.');
         Toast.show({
           type: 'success',
           position: 'bottom',
@@ -139,7 +137,7 @@ const Profile = () => {
             });
           }
     
-          console.log('Profile information updated successfully.');
+          //console.log('Profile information updated successfully.');
           Toast.show({
             type: 'success',
             position: 'bottom',
