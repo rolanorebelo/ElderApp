@@ -8,6 +8,7 @@ import {
   FlatList,
   ScrollView,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   TextInput
 } from 'react-native';
 import { Font } from 'expo-font';
@@ -70,12 +71,12 @@ export default Home = ({ navigation }) => {
           <View style={styles.eventCardBottom}>
             <View style={styles.actionButtonsWrapper}>
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                style={[styles.actionButton, { backgroundColor: '#2D264B' }]}
                 onPress={() => handleJoinEvent(event)}>
                 <Text style={styles.actionButtonText}>Join Event</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+                style={[styles.actionButton, { backgroundColor: '#2D264B' }]}
                 onPress={() => handleViewEvent(event)}>
                 <Text style={styles.actionButtonText}>View Event</Text>
               </TouchableOpacity>
@@ -91,6 +92,7 @@ export default Home = ({ navigation }) => {
     navigation.navigate('TaskDetails', {
       item: item.title,
       serviceType: item.title, // Pass the selected service type
+      profilePicture: profilePicture
     });
   };
 
@@ -168,7 +170,7 @@ export default Home = ({ navigation }) => {
     // Add a new document to the "event_joins" collection
     addDoc(eventJoinsRef, eventData)
       .then(() => {
-        console.log("User joined the event successfully!");
+        //console.log("User joined the event successfully!");
         Toast.show({
           type: 'success',
           position: 'bottom',
@@ -178,6 +180,12 @@ export default Home = ({ navigation }) => {
       })
       .catch((error) => {
         console.error("Error joining the event: ", error);
+        Toast.show({
+          type: 'error',
+          position: 'bottom',
+          text1: 'Error joining the event',
+          visibilityTime: 3000, // Adjust as needed
+        });
       });
   };
 
@@ -187,18 +195,25 @@ export default Home = ({ navigation }) => {
 
   const handleProfileImageClick = () => {
     const displayName = auth.currentUser.displayName;
-    console.log('display',displayName);
-    console.log('user',userName);
-    const displayNameParts = userName.split(' ');
-    const firstName = displayNameParts[0];
-    const lastName = displayNameParts[1];
   
-    navigation.navigate('Profile', {
-      profilePicture: profilePicture,
-      firstName: firstName,
-      lastName: lastName,
-    });
+    // Ensure that userName is not null before splitting
+    if (userName) {
+      const displayNameParts = userName.split(' ');
+      const firstName = displayNameParts[0];
+      const lastName = displayNameParts[1];
+  
+      navigation.navigate('Profile', {
+        profilePicture: profilePicture,
+        firstName: firstName,
+        lastName: lastName,
+      });
+    } else {
+      // Handle the case where userName is null (provide default values or show an error)
+      console.error('User name is null.');
+      // You might want to set default values or show an error message to the user
+    }
   };
+  
   
 
   const renderCategoryItem = ({ item }) => {
@@ -262,7 +277,7 @@ export default Home = ({ navigation }) => {
         <View style={styles.titlesWrapper}>
         <Text style={styles.Subtitle}>
             {`${getGreeting()}, ${userName}`}
-          </Text>
+        </Text>
           <Text style={styles.Title}>What are you looking for today?</Text>
         </View>
         <TouchableOpacity onPress={handleCategoryPress}>
@@ -279,25 +294,30 @@ export default Home = ({ navigation }) => {
         </View>
         </TouchableOpacity>
 
-        {/* Neighbour Chat Button */}
-        <TouchableOpacity
-          style={styles.neighbourChatButton}
-          activeOpacity={0.7}
+      {/* Neighbour Chat Button */}
+<View style={styles.buttonsContainer}>
+
+<TouchableWithoutFeedback
           onPress={() => {
-            navigation.navigate('Chat')
-            // Handle Neighbour Chat button press
-          }}>
-          <LinearGradient
-            colors={['#0077FF', '#FFFFFF']} // Define your gradient colors
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.neighbourChatGradient}>
-            <View style={styles.neighbourChatTextWrapper}>
-              <Feather name="message-square" size={20} color="#0077FF" />
-              <Text style={styles.neighbourChatButtonText}>Neighbour Chat</Text>
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
+            navigation.navigate('NeighbourList'); // Navigate to the NeighbourList screen
+          }}
+          style={{ marginRight: 10, backgroundColor: '#0077FF', borderRadius: 10, overflow: 'hidden', elevation: 2 }}
+        >
+          <View style={styles.neighbourChatTextWrapper}>
+            <Feather name="message-square" size={20} color="black" />
+            <Text style={styles.neighbourChatButtonText}>Neighbour Chat</Text>
+          </View>
+        </TouchableWithoutFeedback>
+<TouchableWithoutFeedback
+  onPress={() => navigation.navigate('TaskTabs')}
+  style={{ marginLeft: 10, backgroundColor: '#0078FF', borderRadius: 10, overflow: 'hidden', elevation: 2 }}>
+  <View style={styles.viewTaskTextWrapper}>
+    <MaterialCommunityIcons name="clipboard-check" size={20} color="black" />
+    <Text style={styles.viewTaskButtonText}>View Task</Text>
+  </View>
+</TouchableWithoutFeedback>
+
+</View>
         <Text style={styles.popularTitle}>Events Happening Near You</Text>
 
         {/* Render event tiles */}
@@ -329,6 +349,12 @@ const styles = StyleSheet.create({
   titlesWrapper: {
     marginTop: 30,
     paddingHorizontal: 20,
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    marginHorizontal: 20,
   },
   joinEventButton: {
     backgroundColor: 'darkblue',
@@ -400,31 +426,51 @@ const styles = StyleSheet.create({
   categorySelectIcon: {
     alignSelf: 'center',
   },
-  neighbourChatButton: {
-    marginTop: 20,
-    marginHorizontal: 20,
-    borderRadius: 20,
-    overflow: 'hidden',
-    elevation: 2,
-  },
-  neighbourChatGradient: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  neighbourChatTextWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  neighbourChatButtonText: {
-    color: '#0077FF',
-    fontFamily: 'Montserrat-SemiBold',
-    fontSize: 16,
-    marginLeft: 5,
-  },
+  // Updated styles for "Neighbour Chat" and "View Task" buttons
+neighbourChatGradient: {
+  flex: 1,
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginRight: 10, // Add margin to separate the buttons
+},
+
+viewTaskGradient: {
+  flex: 1,
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginLeft: 10, // Add margin to separate the buttons
+},
+
+neighbourChatTextWrapper: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingVertical: 10,
+},
+
+viewTaskTextWrapper: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingVertical: 10,
+},
+
+neighbourChatButtonText: {
+  color: '#0077FF',
+  fontFamily: 'Montserrat-SemiBold',
+  fontSize: 16,
+  marginLeft: 5,
+},
+
+viewTaskButtonText: {
+  color: '#0077FF',
+  fontFamily: 'Montserrat-SemiBold',
+  fontSize: 16,
+  marginLeft: 5,
+},
+
   popularWrapper: {
     paddingHorizontal: 20,
   },
@@ -510,6 +556,7 @@ actionButton: {
   borderRadius: 8,
   alignItems: 'center',
   justifyContent: 'center',
+  marginLeft:10
 },
 
 

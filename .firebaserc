@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "elderapp-55680"
-  }
+    "default": "elderapp-55680",
+    "elderapp": "elderapp-55680"
+  },
+  "targets": {},
+  "etags": {}
 }

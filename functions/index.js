@@ -1,64 +1,104 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
+const express = require('express')
+const cors = require('cors')
+
 admin.initializeApp()
-const db = admin.firestore();
-exports.setCustomClaims = functions.https.onCall(async (data, context) => {
-  if (!context.auth || !context.auth.token.admin) {
-    return { error: 'Permission denied' }
-  }
+const db = admin.firestore()
+const app = express()
+app.use(cors({ origin: true }))
 
-  const userId = data.userId // The UID of the user you want to set custom claims for
-  const role = data.role // The role you want to assign (e.g., 'normal' or 'volunteer')
-  console.log(`Setting custom claims for user: ${userId}`)
-  console.log(`Role: ${role}`)
-
+// Define an endpoint to add an event
+app.post('/addEvent', async (req, res) => {
   try {
-    // Set custom claims for the user
-    await admin.auth().setCustomUserClaims(userId, { role })
-    console.log(`Custom claims updated for user: ${userId}`)
-    return { success: `Custom claims updated for user: ${userId}` }
+    const eventData = req.body
+
+    // Perform validation and add the event data to Firestore
+    const eventRef = await db.collection('events').add(eventData)
+
+    res.status(201).json({ id: eventRef.id })
   } catch (error) {
-    console.error('Error setting custom claims:', error)
-    return { error: `Error setting custom claims: ${error.message}` }
+    console.error('Error adding event:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
   }
 })
 
-exports.matchTaskToVolunteer = functions.firestore
-    .document('tasks/{taskId}')
-    .onCreate(async (snap, context) => {
-        const task = snap.data();
-        const taskLocation = task.location; // Adjust to your task schema
-        const maxDistance = 10; // Max distance for matching in kilometers
+// Define an endpoint to set custom claims
+app.post('/setCustomClaims', async (req, res) => {
+  try {
+    const { uid, customClaims } = req.body
 
-        const volunteersRef = db.collection('volunteer');
-        const volunteersSnapshot = await volunteersRef.get();
+    // Set the custom claims for the user
+    await admin.auth().setCustomUserClaims(uid, customClaims)
 
-        const matchedVolunteers = [];
+    res.status(200).json({ message: 'Custom claims set successfully' })
+  } catch (error) {
+    console.error('Error setting custom claims:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
 
-        volunteersSnapshot.forEach((doc) => {
-            const volunteer = doc.data();
-            const volunteerLocation = volunteer.location; // Adjust to your volunteer schema
+app.post('/getAvailableVolunteers', async (req, res) => {
+  try {
+    const { userLocation } = req.body
+    console.log('user location----', userLocation)
+    const volunteersRef = db.collection('volunteer')
+    const volunteersSnapshot = await volunteersRef.get()
+    const volunteersData = []
+    volunteersSnapshot.forEach((volunteerDoc) => {
+      const volunteer = volunteerDoc.data()
+      const volunteerLatitude = volunteer.location.latitude
+      const volunteerLongitude = volunteer.location.longitude
+      console.log('Volunteer Lat', volunteerLatitude)
+      console.log('Volunteer Long', volunteerLongitude)
+      // Calculate distance between user and volunteer (in miles)
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        volunteerLatitude,
+        volunteerLongitude
+      )
 
-            // Calculate distance or use any other matching criteria
-            const distance = calculateDistance(taskLocation, volunteerLocation);
+      console.log(`Distance from User: ${distance} miles`)
+      // Add volunteer to the list if within 5 miles and available
+      if (distance <= 5 && volunteer.available === 'free') {
+        volunteersData.push({
+          uid: volunteerDoc.id,
+          name: `${volunteer.firstName} ${volunteer.lastName}`,
+          ratePerHour: volunteer.ratePerHour,
+          profilePic: volunteer.profilePicture
+        })
+      }
+    })
 
-            if (distance <= maxDistance) {
-                matchedVolunteers.push(volunteer);
-            }
-        });
+    console.log('Available Volunteers:', volunteersData)
 
-        // Do something with matched volunteers (e.g., update the task document)
-        try {
-            // Update the task document with matched volunteers
-            await db.collection('tasks').doc(taskId).update({
-              // You can update the task document with information about the matched volunteers.
-              matched: true,
-              volunteers: matchedVolunteers, // Store volunteer information here.
-            });
-        
-            return { success: 'Task matched with volunteers successfully.' };
-          } catch (error) {
-            console.error('Error matching volunteers:', error);
-            return { error: 'Error matching volunteers.' };
-          }
-    });
+    res.status(200).json(volunteersData)
+  } catch (error) {
+    console.error('Error getting available volunteers:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
+// Function to calculate distance between two coordinates using Haversine formula
+function calculateDistance (lat1, lon1, lat2, lon2) {
+  const R = 3959 // Radius of the Earth in miles
+
+  const toRadians = (angle) => (Math.PI / 180) * angle
+
+  const dLat = toRadians(lat2 - lat1)
+  const dLon = toRadians(lon2 - lon1)
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  const distance = R * c // Distance in miles
+
+  return distance
+}
+// Deploy the Express app as separate Firebase Functions
+exports.api = functions.https.onRequest(app)
+exports.setCustomClaims = functions.https.onRequest(app)
