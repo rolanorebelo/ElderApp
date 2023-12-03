@@ -73,6 +73,7 @@ const VolunteerHome = ({ navigation }) => {
           </View>
         ) : (
           <FlatList
+            style={styles.flatList}
             data={tasks}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
@@ -95,6 +96,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
+  },
+  flatList: {
+    backgroundColor: '#e3e2f5', // Light background color
+    borderRadius: 10, // Rounded corners
   },
   centeredMessage: {
     flex: 1,
@@ -134,7 +139,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   viewTaskButton: {
-    backgroundColor: 'blue',
+    backgroundColor: '#353453',
     padding: 10,
     borderRadius: 8,
     marginTop: 10,

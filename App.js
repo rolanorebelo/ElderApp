@@ -12,7 +12,7 @@ import Home from './screens/Home';
 import Profile from './screens/Profile';
 import TaskDetails from './screens/TaskDetails';
 import VolunteerHome from './screens/Volunteer/VolunteerHome';
-import { LoadingScreen, MatchedVolunteers, Welcome, EventDetails, Header, ViewTask, VolunteerChat, TaskTabs, CurrentTasks, NeighbourList, InvoicePage, InvoicePreview } from './screens';
+import { Notifications, MatchedVolunteers, Welcome, EventDetails, Header, ViewTask, VolunteerChat, TaskTabs, CurrentTasks, NeighbourList, InvoicePage, InvoicePreview, ViewInvoice, TaskChat} from './screens';
 import Toast from 'react-native-toast-message';
 import VolunteerProfile from './screens/Volunteer/VolunteerProfile';
 import * as Font from 'expo-font';
@@ -123,6 +123,34 @@ function ChatStack() {
           headerTitleAlign: 'center',
         }}
       />
+        <Stack.Screen
+        name='TaskChat'
+        component={TaskChat}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Chat',
+          headerTitleAlign: 'center',
+        }}
+      />
+        <Stack.Screen
+        name='ViewInvoice'
+        component={ViewInvoice}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'View Invoice',
+          headerTitleAlign: 'center',
+        }}
+      />
       <Stack.Screen
         name='Profile'
         component={Profile}
@@ -143,9 +171,18 @@ function ChatStack() {
         options={{ headerTitle: 'Post a Task', headerTitleAlign: 'center' }}
       />
       <Stack.Screen
-        name="LoadingScreen"
-        component={LoadingScreen}
-        options={{ headerShown: false }}
+        name="Notifications"
+        component={Notifications}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Notifications',
+          headerTitleAlign: 'center',
+        }}
       />
       <Stack.Screen
         name="MatchedVolunteers"
@@ -153,6 +190,7 @@ function ChatStack() {
         options={{ title: 'Select a Volunteer' }}
       />
       <Stack.Screen name='Login' component={Login} options={{ headerShown: false }} />
+      <Stack.Screen name='SignUp' component={SignUp} />
     </Stack.Navigator>
   );
 }
@@ -238,9 +276,19 @@ function VolunteerStack() {
       <Stack.Screen
         name='VolunteerChat'
         component={VolunteerChat}
-        options={{ title: 'Chat', headerTitleAlign: 'center' }}
+        options={{
+          headerStyle: {
+            backgroundColor: 'black',
+          },
+          headerTitleStyle: {
+            color: 'white',
+          },
+          headerTitle: 'Chat',
+          headerTitleAlign: 'center',
+        }}
       />
-      
+      <Stack.Screen name='Login' component={Login} options={{ headerShown: false }} />
+      <Stack.Screen name='SignUp' component={SignUp} />
     </Stack.Navigator>
   );
 }

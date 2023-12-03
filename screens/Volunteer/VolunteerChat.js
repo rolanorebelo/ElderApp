@@ -1,140 +1,131 @@
-import React, {
-    useState,
-    useLayoutEffect,
-    useCallback,
-  } from 'react';
-  import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-  import { GiftedChat } from 'react-native-gifted-chat';
-  import {
-    collection,
-    addDoc,
-    orderBy,
-    query,
-    onSnapshot,
-  } from 'firebase/firestore';
-  import { signOut } from 'firebase/auth';
-  import { auth, database } from '../../config/firebase';
-  import { useNavigation, useRoute } from '@react-navigation/native';
-  import { AntDesign } from '@expo/vector-icons';
-  import colors from '../../colors';
+import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import { TouchableOpacity, View, Text, Image} from 'react-native';
+import { GiftedChat } from 'react-native-gifted-chat';
+import { collection, addDoc, orderBy, where, query, onSnapshot } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { auth, database } from '../../config/firebase';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { AntDesign } from '@expo/vector-icons';
+import colors from '../../colors';
+
+export default function Chat() {
+  const [messages, setMessages] = useState([]);
+  const [chatParticipants, setChatParticipants] = useState([]); // Array to store participants of the current chat
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { task, vId, userProfilePicture, userName } = route.params;
+
+  const onSignOut = () => {
+    signOut(auth).catch((error) => console.log('Error logging out: ', error));
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={{
+            marginRight: 10,
+          }}
+          onPress={onSignOut}
+        >
+          <AntDesign name="logout" size={24} color={colors.gray} style={{ marginRight: 10 }} />
+        </TouchableOpacity>
+      ),
+      headerLeft: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+          <Image source={{ uri: userProfilePicture }} style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white', marginLeft: 10 }}>{userName}</Text>
+        </View>
+      ),
+    });
+  }, [navigation, userProfilePicture, userName]);
+
+  useLayoutEffect(() => {
+    const collectionRef = collection(database, 'chats');
   
-  export default function Chat() {
-    const [messages, setMessages] = useState([]);
-    const navigation = useNavigation();
-    const route = useRoute();
-    const { task, vId, userProfilePicture, userName } = route.params;
+    if (task.task_description.user_id && auth.currentUser.uid) {
+      const firstParticipantQuery = query(
+        collectionRef,
+        orderBy('createdAt', 'desc'),
+        where('participants', 'array-contains', task.task_description.user_id)
+      );
   
-    const onSignOut = () => {
-      signOut(auth).catch(error => console.log('Error logging out: ', error));
-    };
-  
-    useLayoutEffect(() => {
-        navigation.setOptions({
-          headerRight: () => (
-            <TouchableOpacity
-              style={{ marginRight: 10 }}
-              onPress={onSignOut}
-            >
-              <AntDesign name="logout" size={24} color={colors.gray} />
-            </TouchableOpacity>
-          ),
-          headerLeft: () => (
-            <View style={styles.userProfileContainer}>
-              <Image
-                source={{ uri: userProfilePicture }}
-                style={styles.userProfileImage}
-              />
-              <Text style={styles.userName}>{userName}</Text>
-            </View>
-          ),
+      const unsubscribe = onSnapshot(firstParticipantQuery, (querySnapshot) => {
+        const filteredChats = querySnapshot.docs.filter((doc) => {
+          const participants = doc.data().participants;
+          return participants.includes(auth.currentUser.uid);
         });
-      }, [navigation, userProfilePicture, userName]);
-      
   
-    useLayoutEffect(() => {
-      const collectionRef = collection(database, 'chats');
-      const q = query(collectionRef, orderBy('createdAt', 'desc'));
+        const formattedMessages = [];
   
-      const unsubscribe = onSnapshot(q, querySnapshot => {
-        setMessages(
-          querySnapshot.docs.map(doc => ({
-            _id: doc.data()._id,
-            createdAt: doc.data().createdAt.toDate(),
-            text: doc.data().text,
-            user: doc.data().user,
-          }))
-        );
+        filteredChats.forEach((doc) => {
+          const data = doc.data();
+          const messages = data.messages.map((message) => ({
+            _id: message._id,
+            createdAt: message.createdAt.toDate(),
+            text: message.text,
+            user: message.user,
+          }));
+  
+          formattedMessages.push(...messages);
+        });
+  
+        setMessages(formattedMessages);
       });
   
       return unsubscribe;
-    }, []);
+    }
+  }, [task]);
+
+  useEffect(() => {
+    setChatParticipants([vId, task.task_description.user_id]);
+  }, [task]);
+
+  const onSend = useCallback(
+    (messages = []) => {
+      // Generate a unique ID for the new message
+      const messageId = `${messages[0]._id}-${new Date().getTime()}`;
   
-    const onSend = useCallback(messages => {
-      setMessages(previousMessages =>
-        GiftedChat.append(previousMessages, messages)
-      );
+      // Update the _id of each message in the array
+      const newMessages = messages.map((message) => ({
+        ...message,
+        _id: messageId,
+      }));
   
-      const { _id, createdAt, text, user } = messages[0];
+      setMessages((previousMessages) => GiftedChat.append(previousMessages, newMessages));
+  
+      // Include UIDs of both participants in the "participants" field
+      const participants = [vId, task.task_description.user_id];
+  
       addDoc(collection(database, 'chats'), {
-        _id,
-        createdAt,
-        text,
-        user,
+        createdAt: new Date(),
+        messages: newMessages,
+        participants: participants,
       });
-    }, []);
-  
-    return (
-      <GiftedChat
-        messages={messages}
-        showAvatarForEveryMessage={false}
-        showUserAvatar={false}
-        onSend={messages => onSend(messages)}
-        messagesContainerStyle={{
-          backgroundColor: '#fff',
-        }}
-        textInputStyle={{
-          backgroundColor: '#fff',
-          borderRadius: 20,
-        }}
-        user={{
-          _id: task.task_description.user_id,
-          avatar: 'https://i.pravatar.cc/300', // Replace with the user's avatar URL
-        }}
-        renderUsernameOnMessage
-        renderAvatarOnTop
-        renderAvatar={({ user }) =>
-          user._id === vId ? (
-            <Image source={{ uri: task.profilePicture }} style={styles.avatar} />
-          ) : null
-        }
-        parsePatterns={linkStyle => [
-          {
-            pattern: /#(\w+)/,
-            style: { ...linkStyle, color: 'lightblue' },
-            onPress: props => alert(`press on ${props}`),
-          },
-        ]}
-       
-      />
-    );
-  }
-  
-  const styles = StyleSheet.create({
-    userProfileContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginLeft: 10,
     },
-    userProfileImage: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-    },
-    userName: {
-      marginLeft: 10,
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: colors.textDark,
-    },
-  });
+    [auth.currentUser.uid, task.task_description.user_id]
+  );
   
+  
+
+  return (
+    <GiftedChat
+      messages={messages}
+      showAvatarForEveryMessage={false}
+      showUserAvatar={false}
+      renderAvatar={null}
+      onSend={(messages) => onSend(messages)}
+      messagesContainerStyle={{
+        backgroundColor: '#fff',
+      }}
+      textInputStyle={{
+        backgroundColor: '#fff',
+        borderRadius: 20,
+      }}
+      user={{
+        _id: auth.currentUser.uid,
+        avatar: auth.currentUser.photoURL,
+      }}
+    />
+  );
+}

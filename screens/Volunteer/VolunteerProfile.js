@@ -21,7 +21,7 @@ const VolunteerProfile = () => {
   const [profilePicture, setProfilePicture] = useState(null);
   
   useEffect(() => {
-    const { user } = auth.currentUser;
+    const user  = auth.currentUser;
     setFirstName(route.params.firstName);
     setLastName(route.params.lastName);
     if (user) {
