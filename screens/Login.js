@@ -175,7 +175,7 @@ export default function Login({ navigation }) {
             </View>
           )}
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-  <Text style={{ fontSize: 16, color: COLORS.primary, fontWeight: 'bold', marginTop: 20 }}>
+  <Text style={{ fontSize: 16, color: COLORS.primary, fontWeight: 'bold', marginTop: 20 , alignSelf: 'center'}}>
     Need an account? Sign Up
   </Text>
 </TouchableOpacity>
@@ -219,6 +219,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
+    width: 250,
+    alignSelf: 'center'
   },
   resetButton: {
     backgroundColor: '#2D264B',

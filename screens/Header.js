@@ -90,13 +90,6 @@ const Header = ({ navigation }) => {
   console.log('Profile Picture:', profilePicture);
   return (
     <View style={styles.headerWrapper}>
-      <TouchableOpacity
-        style={styles.notificationButton}
-        onPress={() => {} /* Add your notification logic here */}
-      >
-        <Feather name="bell" size={24} color={colors.textDark} />
-      </TouchableOpacity>
-
       <View style={styles.centerSection}>
         <TouchableOpacity onPress={handleProfileImageClick}>
         <Image
@@ -134,6 +127,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     alignItems: 'center',
     marginTop: 28,
+    marginBottom: 10  
   },
   leftSection: {
     flex: 1,
@@ -152,11 +146,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 40,
+    marginLeft: 40
   },
-  Subtitle: {
+  subtitle: {
     color: '#000',
     fontFamily: 'Bentham',
     fontSize: 20,
+    fontWeight: 'bold'
   },
   chatButton: {
     backgroundColor: colors.primary,

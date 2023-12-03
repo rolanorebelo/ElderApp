@@ -89,19 +89,28 @@ export default function SignUp({ navigation }) {
       !lastName ||
       !mobileNumber ||
       !location
-    ){
+    ) {
       setError('Please fill in all the required fields.');
+      setPasswordMismatch(false); // Reset password mismatch state
       return false;
     }
+  
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address.');
-      return;
+      return false;
     }
-
+  
+    if (password !== confirmPassword) {
+      setPasswordMismatch(true);
+      return false;
+    }
+  
     setError(""); // Clear any previous error message
+    setPasswordMismatch(false); // Reset password mismatch state
     return true;
   };
+  
 
   const onHandleSignup = async () => {
     if (!validateInput()) {

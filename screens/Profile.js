@@ -19,34 +19,43 @@ const Profile = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
+  const [location, setLocation] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
-  
+
   useEffect(() => {
-    const { user } = auth.currentUser;
+    const user = auth.currentUser;
     setFirstName(route.params.firstName);
     setLastName(route.params.lastName);
+    console.log('userrr',user);
     if (user) {
   
       // Fetch the mobileNumber from Firestore based on the user's UID
       const userDocRef = doc(database, 'users', user.uid);
+      console.log("user doc red",userDocRef);
       getDoc(userDocRef)
         .then((docSnap) => {
           if (docSnap.exists()) {
             const userData = docSnap.data();
             const userMobileNumber = userData.mobileNumber;
+            const location = userData.location;
+            console.log('Mobileee',userMobileNumber);
             if (userMobileNumber) {
               setMobileNumber(userMobileNumber);
+            }
+            if (location) {
+              setLocation(location);
             }
           }
         })
         .catch((error) => {
-          console.error('Error fetching mobileNumber:', error);
+          console.error('Error fetching mobileNumber and location:', error);
         });
     }
   
     // Update the profile picture with the one from the route params
     setProfilePicture(route.params.profilePicture);
   }, [route.params.profilePicture, route.params.firstName, route.params.lastName]);
+  console.log('Mobileee 2',mobileNumber);
 
   const handleChangePicture = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -120,6 +129,10 @@ const Profile = () => {
           if (mobileNumber.trim() !== '') {
             updatedData.mobileNumber = mobileNumber;
           }
+
+          if (location.trim() !== '') {
+            updatedData.location = location;
+          }
     
           // Check if profilePicture is not empty and update it
           if (profilePicture) {
@@ -170,6 +183,9 @@ const Profile = () => {
       case 'mobileNumber':
         setMobileNumber(value);
         break;
+      case 'location':
+        setLocation(value);
+        break;
       default:
         break;
     }
@@ -218,6 +234,13 @@ const Profile = () => {
         placeholder="Mobile Number"
         value={mobileNumber}
         onChangeText={(value) => handleChange('mobileNumber', value)}
+        style={styles.input}
+      />
+       <TextInput
+        name="location"
+        placeholder="Location"
+        value={location}
+        onChangeText={(value) => handleChange('location', value)}
         style={styles.input}
       />
        <View style={styles.updateButtonContainer}>

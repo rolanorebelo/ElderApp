@@ -193,6 +193,10 @@ export default Home = ({ navigation }) => {
     navigation.navigate('EventDetails', { event });
   };
 
+  const handleNotificationClick = () => {
+    navigation.navigate('Notifications');
+  }
+
   const handleProfileImageClick = () => {
     const displayName = auth.currentUser.displayName;
   
@@ -257,7 +261,9 @@ export default Home = ({ navigation }) => {
         {/* Header */}
         <SafeAreaView>
           <View style={styles.headerWrapper}>
+          <TouchableOpacity onPress={handleNotificationClick}>
             <Feather name="bell" size={24} color={colors.textDark} />
+            </TouchableOpacity>
             <TouchableOpacity onPress={handleProfileImageClick}>
             <Image
               source={

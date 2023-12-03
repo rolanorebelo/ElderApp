@@ -6,7 +6,6 @@ import TaskDetails from "./TaskDetails";
 import Profile from "./Profile";
 import Chat from "./Chat";
 import VolunteerHome from "./Volunteer/VolunteerHome";
-import LoadingScreen from "./LoadingScreen";
 import MatchedVolunteers from "./MatchedVolunteers";
 import EventDetails from "./EventDetails";
 import Header from "./Header";
@@ -19,6 +18,9 @@ import CurrentTasks from "./CurrentTasks";
 import NeighbourList from "./NeighbourList";
 import InvoicePage from "./Volunteer/InvoicePage";
 import InvoicePreview from "./Volunteer/InvoicePreview";
+import ViewInvoice from "./ViewInvoice";
+import TaskChat from "./TaskChat";
+import Notifications from "./Notifications";
 export {
     Login,
     Welcome,
@@ -28,7 +30,6 @@ export {
     Profile,
     Chat,
     VolunteerHome,
-    LoadingScreen,
     MatchedVolunteers,
     EventDetails,
     Header,
@@ -40,5 +41,8 @@ export {
     CompletedTasks,
     NeighbourList,
     InvoicePage,
-    InvoicePreview
+    InvoicePreview,
+    ViewInvoice,
+    TaskChat,
+    Notifications
 }
