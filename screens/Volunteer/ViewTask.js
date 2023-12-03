@@ -1,22 +1,18 @@
-// ViewTask.js
-
-import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Feather } from '@expo/vector-icons';
 import colors from '../../assets/colors/colors';
-
+import axios from 'axios';
+import KeyValueList from '../KeyValueList';
 const ViewTask = ({ route, navigation }) => {
   const { task, vId } = route.params;
-  const [buttonsVisible, setButtonsVisible] = useState(task.status !== 'confirmed' && task.status !== 'completed');
   const [volunteerProfilePicture, setVolunteerProfilePicture] = useState(null);
   const [taskCompletedDisabled, setTaskCompletedDisabled] = useState(false);
-  console.log('statyss', task.status);
-  console.log('Buttton',buttonsVisible);
-  useEffect(() => {
-    // Check if the task is confirmed and set chat icon visibility
+  const [confirming, setConfirming] = useState(false);
+  const [updatedStatus, setUpdatedStatus] = useState('pending');
 
-    // Fetch volunteer profile picture
+  useEffect(() => {
     const fetchVolunteerProfile = async () => {
       try {
         const volunteerRef = doc(getFirestore(), 'volunteer', vId);
@@ -30,7 +26,7 @@ const ViewTask = ({ route, navigation }) => {
         console.error('Error fetching volunteer profile:', error);
       }
     };
-    setButtonsVisible(task.status !== 'confirmed' && task.status !== 'completed');
+
     fetchVolunteerProfile();
   }, [route.params]);
 
@@ -39,67 +35,88 @@ const ViewTask = ({ route, navigation }) => {
   };
 
   const updateTaskCompletedButton = () => {
-    // Disable the "Task Completed" button
     setTaskCompletedDisabled(true);
   };
 
   const handleCreateInvoice = () => {
-    // Navigate to InvoicePage when the task is completed
-    if (task.status === 'completed') {
+    if (updatedStatus === 'completed') {
       navigation.navigate('InvoicePage', { taskId: task.taskId, vId });
     }
   };
 
-
-  // Function to update the task status in Firestore
   const updateTaskStatus = async (newStatus) => {
     try {
+      setConfirming(true); // Set the loader when confirming
+
+      await axios.post('https://us-central1-elderapp-55680.cloudfunctions.net/api/notify-task-status-update', {
+        userId: task.task_description.user_id,
+        taskId: task.taskId,
+        status: newStatus,
+      });
+
       const taskRef = doc(getFirestore(), 'tasks', task.taskId);
       await updateDoc(taskRef, { status: newStatus });
-
-      console.log('New Status:', newStatus); // Log the newStatus
 
       if (newStatus === 'confirmed') {
         const volunteerRef = doc(getFirestore(), 'volunteer', vId);
         await updateDoc(volunteerRef, { available: 'busy' });
+        // Delay the update of buttonsVisible by 1 second (adjust as needed)
 
-        console.log('Setting buttonsVisible to false');
-        setButtonsVisible(false);// Set buttonsVisible to false
+        setConfirming(false);
+        // Trigger the effect manually after updating the task status
+        fetchTaskStatus();
       } else if (newStatus === 'completed') {
-        setButtonsVisible(newStatus !== 'completed');
         updateTaskCompletedButton();
         const volunteerRef = doc(getFirestore(), 'volunteer', vId);
         await updateDoc(volunteerRef, { available: 'free' });
-        // Additional logic for completing the task
+        // Trigger the effect manually after updating the task status
+        fetchTaskStatus();
       } else if (newStatus === 'declined') {
         const volunteerRef = doc(getFirestore(), 'volunteer', vId);
         await updateDoc(volunteerRef, { available: 'free' });
         navigation.navigate('VolunteerHome');
       }
-
-      console.log('Buttton',buttonsVisible);
-
-      // // Add this line to show the chat icon and task completed button after confirming
-      //  setButtonsVisible(newStatus !== 'confirmed');
+      console.log("button vis", updatedStatus);
     } catch (error) {
       console.error('Error updating task status: ', error);
-      // Handle the error as needed
+    } finally {
+      setConfirming(false); // Stop the loader when done
     }
   };
 
+  const fetchTaskStatus = async () => {
+    try {
+      const taskRef = doc(getFirestore(), 'tasks', task.taskId);
+      const taskDoc = await getDoc(taskRef);
+
+      if (taskDoc.exists()) {
+        const updatedTask = taskDoc.data();
+        // console.log('updated',updatedTask);
+        // Update the local state or trigger any other necessary actions based on the updated task status
+        // For example, you can update the 'task' state with the updated task data
+        // setTask(updatedTask);
+        console.log("Updated task status:", updatedTask.status);
+        setUpdatedStatus(updatedTask.status);
+      }
+    } catch (error) {
+      console.error('Error fetching updated task status:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Call the fetchTaskStatus function
+    console.log('taskkk', updatedStatus);
+    fetchTaskStatus();
+  }, [updatedStatus]); // Run this effect when the task status changes
+
   return (
-    <View style={styles.container}>
-      {task.status === 'confirmed' && !buttonsVisible && (
+    <ScrollView contentContainerStyle={styles.container}>
+      {updatedStatus === 'confirmed' && updatedStatus !== 'completed' && (
         <TouchableOpacity
           style={styles.chatButton}
           onPress={handleChatPress}
         >
           <Feather name="message-square" size={24} color={colors.lightGray} />
-        </TouchableOpacity>
-      )}
-        {task.status === 'completed' && (
-        <TouchableOpacity style={styles.createInvoiceButton} onPress={handleCreateInvoice}>
-          <Text style={styles.createInvoiceButtonText}>Create Invoice</Text>
         </TouchableOpacity>
       )}
 
@@ -128,37 +145,40 @@ const ViewTask = ({ route, navigation }) => {
 
         {/* Task description and additional requests */}
         <View style={styles.row}>
-          <Text style={styles.label}>Task Description:</Text>
+        <Text style={styles.label}>Task Description:</Text>
+        {typeof task.task_description.serviceDescription === 'object' ? (
+          <KeyValueList data={task.task_description.serviceDescription} />
+        ) : (
           <Text style={styles.value}>{task.task_description.serviceDescription}</Text>
-        </View>
+        )}
+      </View>
+
         <View style={styles.row}>
           <Text style={styles.label}>Additional Requests:</Text>
-          <Text style={styles.value}>{task.task_description.additonalRequests}</Text>
+          <Text style={styles.value}>{task.task_description.additionalRequests}</Text>
         </View>
       </View>
 
       {/* Confirm and Forfeit buttons */}
-      {task.status !== 'confirmed' && buttonsVisible && (
+      {updatedStatus !== 'confirmed' && updatedStatus !== 'completed' && (
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={() => {
-              // Handle confirm button press
-              setButtonsVisible(false);
               updateTaskStatus('confirmed');
-              
-              // You can add logic for confirming the task
             }}
           >
-            <Text style={styles.buttonText}>Confirm Task</Text>
+            {confirming ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text style={styles.buttonText}>Confirm Task</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.forfeitButton}
             onPress={() => {
-              // Handle forfeit button press
               updateTaskStatus('declined');
-              // You can add logic for forfeiting the task
             }}
           >
             <Text style={styles.buttonText}>Forfeit Task</Text>
@@ -167,22 +187,30 @@ const ViewTask = ({ route, navigation }) => {
       )}
 
       {/* Task Completed button */}
-      {(task.status === 'confirmed' || task.status === 'completed' ) && !buttonsVisible && (
+      {(updatedStatus === 'confirmed' || updatedStatus === 'completed') && (
         <TouchableOpacity
           style={styles.completedButton}
           onPress={() => {
-            // Handle Task Completed button press
             updateTaskStatus('completed');
-            // You can add logic for completing the task
           }}
-          disabled={task.status === 'completed' || taskCompletedDisabled}
+          disabled={updatedStatus === 'completed' || taskCompletedDisabled}
         >
-          <Text style={styles.buttonText}>
-            {task.status === 'completed' ? 'Task Completed' : 'Complete Task'}
-          </Text>
+          {confirming ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.buttonText}>
+              {updatedStatus === 'completed' ? 'Task Completed' : 'Complete Task'}
+            </Text>
+          )}
         </TouchableOpacity>
       )}
-    </View>
+      {/* Create Invoice button */}
+      {updatedStatus === 'completed' && (
+        <TouchableOpacity style={styles.createInvoiceButton} onPress={handleCreateInvoice}>
+          <Text style={styles.createInvoiceButtonText}>Create Invoice</Text>
+        </TouchableOpacity>
+      )}
+    </ScrollView>
   );
 };
 
@@ -208,11 +236,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   createInvoiceButton: {
-    backgroundColor: 'green', // Choose your desired color
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 20,
+    backgroundColor: '#13114c', // Choose your desired color
+    padding: 15,
+    width: '100%', // Occupy the entire width
     alignItems: 'center',
+    position: 'absolute', // Position the button absolutely
+    bottom: 0, // Align the button to the bottom
   },
   createInvoiceButtonText: {
     color: 'white', // Choose your desired text color

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { database } from '../config/firebase';
+import { auth, database } from '../config/firebase';
 import { useNavigation } from '@react-navigation/native';
 
 const CurrentTasks = () => {
@@ -12,26 +12,31 @@ const CurrentTasks = () => {
   useEffect(() => {
     const fetchCurrentTasks = async () => {
       try {
-        const q = query(collection(database, 'tasks'), where('status', '==', 'confirmed'));
+        const user = auth.currentUser;
+        const userId = user.uid;
+    
+        // Add where clause to filter tasks by user ID
+        const q = query(collection(database, 'tasks'), where('status', '==', 'confirmed'), where('task_description.user_id', '==', userId));
         const querySnapshot = await getDocs(q);
-
+    
         const tasks = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-
+    
         setCurrentTasks(tasks);
       } catch (error) {
         console.error('Error fetching current tasks: ', error);
       }
     };
+    
 
     fetchCurrentTasks();
   }, []);
 
-  const handleChatPress = (userId, volunteerId) => {
+  const handleChatPress = (item) => {
     // Navigate to the chat window with user and volunteer information
-    navigation.navigate('Chat', { userId, volunteerId });
+    navigation.navigate('TaskChat', {task: item});
   };
 
   return (
@@ -49,7 +54,7 @@ const CurrentTasks = () => {
               {/* Add other task details as needed */}
               <TouchableOpacity
                 style={styles.chatButton}
-                onPress={() => handleChatPress(item.user_id, item.selectedVolunteerId)}>
+                onPress={() => handleChatPress(item)}>
                 <Text style={styles.chatButtonText}>Chat</Text>
               </TouchableOpacity>
             </View>
@@ -65,12 +70,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  flatList: {
+    backgroundColor: '#F0F0F0', // Light background color
+    borderRadius: 10, // Rounded corners
+  },
   taskItem: {
     marginBottom: 16,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#F5F5F5',
-    position: 'relative',
+    backgroundColor: '#ddddec', // Tile background color
   },
   chatButton: {
     position: 'absolute',

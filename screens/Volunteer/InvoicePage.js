@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { database } from '../../config/firebase';
-import InvoicePreview from './InvoicePreview'; // Import your InvoicePreview component
-
+import InvoicePreview from './InvoicePreview';
+import axios from 'axios';
 const InvoicePage = ({ route }) => {
   const { taskId, vId } = route.params;
   const [hoursWorked, setHoursWorked] = useState('');
-  const [ratePerHour, setRatePerHour] = useState(0); // Default rate, you may change it
+  const [ratePerHour, setRatePerHour] = useState(0);
   const [expenses, setExpenses] = useState('');
   const [taskDetails, setTaskDetails] = useState({});
   const [volunteerDetails, setVolunteerDetails] = useState({});
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [loadingTaskDetails, setLoadingTaskDetails] = useState(true);
   const [loadingVolunteerDetails, setLoadingVolunteerDetails] = useState(true);
+  const [loadingSubmit, setLoadingSubmit] = useState(false); // New state for loading during submission
 
   const navigation = useNavigation();
 
@@ -60,20 +61,56 @@ const InvoicePage = ({ route }) => {
     setPreviewModalVisible(true);
   };
 
-  const handleSubmit = () => {
-    // Logic to submit the invoice
-    // You can send the data to your backend or perform any other required actions
-    navigation.goBack(); // Navigate back after submission
+  const handleSubmit = async () => {
+    try {
+      setLoadingSubmit(true); // Start loading, show spinner
+
+      // Logic to submit the invoice
+      // ...
+
+      await axios.post('https://us-central1-elderapp-55680.cloudfunctions.net/api/notify-new-invoice', {
+        userId: taskDetails.task_description.user_id,
+        invoiceId: taskId,
+      });
+
+
+      const userDocRef = doc(database, 'users', taskDetails.task_description.user_id);
+      const userDocSnapshot = await getDoc(userDocRef);
+
+      if (userDocSnapshot.exists()) {
+        const userData = userDocSnapshot.data();
+        const invoicesArray = userData.invoices || [];
+
+        const updatedInvoices = [
+          ...invoicesArray,
+          {
+            taskId: taskId,
+            volunteerName: `${volunteerDetails.firstName} ${volunteerDetails.lastName}`,
+            serviceType: taskDetails.serviceType,
+            ratePerHour,
+            hoursWorked,
+            expenses,
+            // Add other invoice details as needed
+          },
+        ];
+
+        await updateDoc(userDocRef, { invoices: updatedInvoices });
+      }
+      console.log('Submitted successfully');
+    } catch (error) {
+      console.error('Error submitting invoice: ', error);
+    } finally {
+      setLoadingSubmit(false); // Stop loading, hide spinner
+      navigation.goBack(); // Navigate back after submission
+    }
   };
 
-  // Calculate expenses based on hours worked and rate per hour
   useEffect(() => {
     const calculatedExpenses = parseFloat(hoursWorked) * ratePerHour;
     setExpenses(isNaN(calculatedExpenses) ? '' : calculatedExpenses.toFixed(2));
   }, [hoursWorked, ratePerHour]);
 
   if (loadingTaskDetails || loadingVolunteerDetails) {
-    // If data is still loading, show a loading indicator
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="blue" />
@@ -83,20 +120,15 @@ const InvoicePage = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      {/* Task Details */}
       <Text style={styles.label}>Task Details</Text>
       <Text>{`Service Type: ${taskDetails.serviceType}`}</Text>
       <Text>{`Date: ${taskDetails.task_description.date}`}</Text>
       <Text>{`Client Name: ${taskDetails.task_description.user_name}`}</Text>
-      {/* Add other task details as needed */}
 
-      {/* Volunteer Details */}
       <Text style={styles.label}>Volunteer Details</Text>
       <Text>{`Name: ${volunteerDetails.firstName} ${volunteerDetails.lastName}`}</Text>
       <Text>{`Rate Per Hour: $${ratePerHour.toFixed(2)}`}</Text>
-      {/* Add other volunteer details as needed */}
 
-      {/* Input for hours worked */}
       <Text style={styles.label}>Hours Worked:</Text>
       <TextInput
         style={styles.input}
@@ -105,26 +137,27 @@ const InvoicePage = ({ route }) => {
         keyboardType="numeric"
       />
 
-      {/* Display calculated expenses */}
       <Text style={styles.label}>Expenses:</Text>
       <Text style={styles.expenses}>{`$${expenses}`}</Text>
 
-      {/* Preview and Submit buttons */}
       <TouchableOpacity style={styles.previewButton} onPress={handlePreview}>
         <Text style={styles.buttonText}>Preview</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit</Text>
+        {loadingSubmit ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Text style={styles.buttonText}>Submit</Text>
+        )}
       </TouchableOpacity>
 
-      {/* Render the InvoicePreview modal */}
       <Modal
         visible={previewModalVisible}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setPreviewModalVisible(false)}
       >
-       <InvoicePreview
+        <InvoicePreview
           invoiceDetails={{
             clientName: taskDetails.task_description.user_name,
             taskName: taskDetails.serviceType,

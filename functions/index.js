@@ -80,6 +80,46 @@ app.post('/getAvailableVolunteers', async (req, res) => {
   }
 })
 
+// Notify new invoice endpoint
+app.post('/notify-new-invoice', async (req, res) => {
+  try {
+    const { userId, invoiceId } = req.body
+
+    await admin.firestore().collection('notifications').add({
+      userId: userId,
+      message: 'You have a new invoice. Go to "Completed Tasks" to check.',
+      timestamp: new Date(),
+      type: 'invoice',
+      entityId: invoiceId
+    })
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Error notifying new invoice:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
+// Notify task status update endpoint
+app.post('/notify-task-status-update', async (req, res) => {
+  try {
+    const { userId, taskId, status } = req.body
+
+    await admin.firestore().collection('notifications').add({
+      userId: userId,
+      message: `Task status update: ${status}`,
+      timestamp: new Date(),
+      type: 'task',
+      entityId: taskId
+    })
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Error notifying task status update:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
 // Function to calculate distance between two coordinates using Haversine formula
 function calculateDistance (lat1, lon1, lat2, lon2) {
   const R = 3959 // Radius of the Earth in miles
