@@ -1,5 +1,6 @@
-Elderly Companion App
-Introduction
+# **Elderly Companion App**
+
+**Introduction**
 
 The Elderly Companion App is a mobile application designed to address the unique challenges faced by elderly individuals in accessing essential services, receiving assistance with daily tasks, and maintaining social connections within their local communities. This document serves as a guide to the project, outlining its purpose, stakeholders, system requirements, and development details.
 Problem Statement
@@ -13,27 +14,27 @@ Stakeholders
     Community Organizations: Collaborate with the app to promote and organize events for the elderly.
     Software Engineering Team: Responsible for the technical aspects of the project.
 
-System Requirements
-Frontend Framework
+**System Requirements**
+**Frontend Framework**
 
     The app's frontend is developed using React Native with Expo for cross-platform compatibility.
 
-Backend Framework
+**Backend Framework**
 
     Firebase handles the complete backend, including APIs and database management.
 
-Cloud Services
+**Cloud Services**
 
     Utilizes Firebase services, such as Firestore for database management and Cloud Functions for API implementation.
 
-Installation and Setup
-Prerequisites
+**Installation and Setup**
+**Prerequisites**
 
     Node.js
     Expo CLI
     Firebase CLI
 
-Steps
+**Steps**
 
     Clone the repository: git clone https://github.com/rolanorebelo/ElderApp.git
     Navigate to the project directory: cd ElderApp
