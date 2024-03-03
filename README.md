@@ -6,13 +6,15 @@ The Elderly Companion App is a mobile application designed to address the unique
 Problem Statement
 
 Many elderly individuals experience isolation, difficulty in accessing assistance with daily tasks, and a lack of engagement in community events. Existing platforms do not sufficiently address these issues. The Elderly Companion App aims to bridge this gap by providing a comprehensive solution that connects elderly users with trustworthy neighbors and service providers.
-Stakeholders
 
-    Product Owner: Defines the product's vision, features, and goals.
-    Elderly Users: Primary beneficiaries of the app, actively using it for various tasks and interactions.
-    Volunteers/Service Providers: Offer assistance and services to elderly users.
-    Community Organizations: Collaborate with the app to promote and organize events for the elderly.
-    Software Engineering Team: Responsible for the technical aspects of the project.
+**Stakeholders**
+
+1. Product Owner: Defines the product's vision, features, and goals.
+2. Elderly Users: Primary beneficiaries of the app, actively using it for various tasks and interactions.
+3. Volunteers/Service Providers: Offer assistance and services to elderly users.
+4. Community Organizations: Collaborate with the app to promote and organize events for the elderly.
+5. Software Engineering Team: Responsible for the technical aspects of the project.
+
 
 **System Requirements**
 **Frontend Framework**
