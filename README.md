@@ -1,5 +1,7 @@
 # Elderly Companion App
 
+## Demo: https://www.youtube.com/watch?v=-ZqYSnEtLQY
+
 ## Introduction
 
 The Elderly Companion App is a mobile application designed to address the unique challenges faced by elderly individuals in accessing essential services, receiving assistance with daily tasks, and maintaining social connections within their local communities. This document serves as a guide to the project, outlining its purpose, stakeholders, system requirements, and development details.
